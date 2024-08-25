@@ -49,6 +49,14 @@
             margin-right: 10px;
             border-radius: 8px;
         }
+
+        .quote-background {
+            background-color: #f1f3f5;
+            border-left: 4px solid #cfd8dc;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 8px;
+        }
     </style>
 </head>
 
@@ -91,7 +99,7 @@
             <h3 class="text-lg font-semibold mb-2 text-gray-700">上传列表</h3>
             <ul class="space-y-2">
                 <template x-for="(image, index) in images" :key="index">
-                    <li class="neumorphism flex items-center p-2 rounded shadow-sm">
+                    <li class="quote-background flex items-center p-2 rounded shadow-sm">
                         <!-- 缩小后的文件选择时的预览图 -->
                         <img :src="image.preview" alt="预览" class="preview-image">
                         <!-- 图片名称 -->
@@ -126,7 +134,7 @@
             <h3 class="text-lg font-semibold mb-2 text-gray-700">上传结果</h3>
             <ul class="space-y-2">
                 <template x-for="(result, index) in uploadedUrls" :key="index">
-                    <li class="neumorphism flex items-center p-2 rounded shadow-sm">
+                    <li class="quote-background flex items-center p-2 rounded shadow-sm">
                         <!-- 上传成功后的缩略图 -->
                         <img :src="result.preview" alt="预览" class="preview-image">
                         <!-- 代码选项 -->
@@ -152,7 +160,7 @@
                 </template>
             </ul>
         </div>
-       </main>
+    </main>
 
     <script>
         function imageUploader() {
@@ -285,3 +293,4 @@
 </body>
 
 </html>
+
