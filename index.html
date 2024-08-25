@@ -11,21 +11,21 @@
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
         body {
-            background: #f8f9fa;
+            background: #f8f9fa; /* 更浅的背景颜色 */
         }
 
         .neumorphism {
-            background: #ffffff;
+            background: #ffffff; /* 纯白色背景 */
             border-radius: 16px;
-            box-shadow: 6px 6px 12px #e0e0e0,
-                        -6px -6px 12px #ffffff;
+            box-shadow: 6px 6px 12px #e0e0e0, /* 浅灰色阴影 */
+                        -6px -6px 12px #ffffff; /* 白色高光 */
         }
 
         .neumorphism-inner {
-            background: #ffffff;
+            background: #ffffff; /* 纯白色背景 */
             border-radius: 16px;
-            box-shadow: inset 6px 6px 12px #e0e0e0,
-                        inset -6px -6px 12px #ffffff;
+            box-shadow: inset 6px 6px 12px #e0e0e0, /* 内阴影 */
+                        inset -6px -6px 12px #ffffff; /* 内高光 */
         }
 
         .neumorphism-hover:hover {
@@ -107,6 +107,7 @@
         </div>
 
         <div class="mt-6" x-show="uploadedUrls.length > 0">
+            <!-- 使用 flex 排列 "上传结果" 和 "复制全部链接" -->
             <div class="flex justify-between items-center mb-2">
                 <h3 class="text-lg font-semibold text-gray-700">上传结果</h3>
                 <button @click="copyAllUrls" class="text-sm text-blue-500 hover:text-blue-700">
@@ -137,7 +138,7 @@
                 images: [],
                 uploadedUrls: [],
                 dragover: false,
-                uploadService: 'telegraph',
+                uploadService: 'telegraph', // 默认上传服务
 
                 handleDrop(e) {
                     console.log('Files dropped:', e.dataTransfer.files);
@@ -149,7 +150,7 @@
                     this.addFiles(e.target.files);
                 },
                 handlePaste(e) {
-                    console.log('Files pasted:', e.clipboardData.items);
+                    console.log('Files pasted:',e.clipboardData.items);
                     const items = e.clipboardData.items;
                     for (let item of items) {
                         if (item.type.indexOf('image') !== -1) {
@@ -178,7 +179,8 @@
                     }
                 },
                 uploadImages() {
-                    const uploadUrl = this.uploadService === 'imgbb' ? 'https://api.imgbb.com/1/upload' : 'https://telegra.ph/upload';
+                    // 根据选择的上传服务设置URL
+                    const uploadUrl = this.uploadService === 'imgbb' ? 'https://api.imgbb.com/1/upload' : '/upload';
                     const apiKey = '670099fdeef8019b7624a39d6c4cc7d7'; // 只有 imgbb 使用
 
                     console.log('Starting upload with service:', this.uploadService);
@@ -193,7 +195,7 @@
                             formData.append('key', apiKey);
                             formData.append('image', image.file);
                         } else {
-                            formData.append('file', image.file); // Telegraph 使用 'file' 作为字段名
+                            formData.append('file', image.file); // 使用相同的文件字段名
                         }
 
                         fetch(uploadUrl, {
@@ -213,10 +215,10 @@
                                 const fullUrl = data.data.url;
                                 this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
                                 image.status = '已完成';
-                            } else if (this.uploadService === 'telegraph' && Array.isArray(data) && data[0] && data[0].src) {
-                                // 确保响应数据是数组，并且有 src 属性
+                            } else if (this.uploadService === 'telegraph' && data[0] && data[0].src) {
+                                // 正确处理URL，避免重复的 '/file'
                                 const relativePath = data[0].src.startsWith('/file') ? data[0].src : `/file${data[0].src}`;
-                                const fullUrl = `https://telegra.ph${relativePath}`;
+                                const fullUrl = `${window.location.origin}${relativePath}`;
                                 this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
                                 image.status = '已完成';
                             } else {
