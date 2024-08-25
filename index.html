@@ -37,7 +37,7 @@
     </style>
 </head>
 
-<body class="min-h-screen flex flex-col items-center justify-start p-4">
+<body class="min-h-screen flex flex-col items-center justify-start p-4" x-data="imageUploader()">
     <!-- 顶部导航栏 -->
     <header class="neumorphism w-full py-4 shadow-md">
         <div class="container mx-auto flex justify-between items-center px-4">
@@ -51,7 +51,7 @@
     </header>
 
     <!-- 主内容区 -->
-    <main class="neumorphism w-full max-w-4xl mt-6 p-8" x-data="imageUploader()">
+    <main class="neumorphism w-full max-w-4xl mt-6 p-8">
         <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">上传您的图片</h2>
 
         <div class="mt-4">
@@ -116,16 +116,17 @@
             </div>
             <ul class="space-y-2">
                 <template x-for="(result, index) in uploadedUrls" :key="index">
-                    <li class="neumorphism flex items-center justify-between p-2 rounded shadow-sm">
-                        <div class="flex items-center flex-grow mr-2">
+                    <li class="neumorphism flex flex-col items-start justify-between p-2 rounded shadow-sm">
+                        <div class="flex items-center w-full">
                             <img :src="result.preview" alt="预览" class="w-10 h-10 object-cover mr-2 rounded">
                             <a :href="result.url" target="_blank" class="text-sm text-blue-500 hover:underline truncate"
                                 x-text="result.url"></a>
                         </div>
-                        <button @click="copyToClipboard(result.url, $event)"
-                            class="text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap">
-                            复制
-                        </button>
+                        <div class="text-xs w-full mt-2">
+                            <p><strong>HTML:</strong> <span x-html="generateHtmlCode(result.url)"></span></p>
+                            <p><strong>BBCode:</strong> <span x-html="generateBBCode(result.url)"></span></p>
+                            <p><strong>Markdown:</strong> <span x-html="generateMarkdownCode(result.url)"></span></p>
+                        </div>
                     </li>
                 </template>
             </ul>
@@ -155,118 +156,114 @@
                     for (let item of items) {
                         if (item.type.indexOf('image') !== -1) {
                             const blob = item.getAsFile();
-                            this.addFiles([blob]);
-                        }
-                    }
-                },
-                addFiles(files) {
-                    console.log('Adding files:', files);
-                    for (let file of files) {
-                        if (file.type.startsWith('image/')) {
-                            const reader = new FileReader();
-                            reader.onload = (e) => {
-                                this.images.push({
-                                    file: file,
-                                    name: file.name || 'pasted-image.png',
-                                    status: '等待中',
-                                    preview: e.target.result
-                                });
-                            };
-                            reader.readAsDataURL(file);
-                        } else {
-                            console.log('Not an image file:', file);
-                        }
-                    }
-                },
-                uploadImages() {
-                    // 根据选择的上传服务设置URL
-                    const uploadUrl = this.uploadService === 'imgbb' ? 'https://api.imgbb.com/1/upload' : '/upload';
-                    const apiKey = '670099fdeef8019b7624a39d6c4cc7d7'; // 只有 imgbb 使用
-
-                    console.log('Starting upload with service:', this.uploadService);
-
-                    this.images.forEach(image => {
-                        if (image.status !== '等待中') return;
-
-                        image.status = '上传中';
-                        const formData = new FormData();
-
-                        if (this.uploadService === 'imgbb') {
-                            formData.append('key', apiKey);
-                            formData.append('image', image.file);
-                        } else {
-                            formData.append('file', image.file); // 使用相同的文件字段名
-                        }
-
-                        fetch(uploadUrl, {
-                            method: 'POST',
-                            body: formData
-                        })
-                        .then(response => {
-                            console.log('Response:', response);
-                            if (!response.ok) {
-                                throw new Error(`HTTP error! status: ${response.status}`);
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            console.log('Response data:', data);
-                            if (this.uploadService === 'imgbb' && data.status === 200) {
-                                const fullUrl = data.data.url;
-                                this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
-                                image.status = '已完成';
-                            } else if (this.uploadService === 'telegraph' && data[0] && data[0].src) {
-                                // 正确处理URL，避免重复的 '/file'
-                                const relativePath = data[0].src.startsWith('/file') ? data[0].src : `/file${data[0].src}`;
-                                const fullUrl = `${window.location.origin}${relativePath}`;
-                                this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
-                                image.status = '已完成';
-                            } else {
-                                throw new Error('Upload failed: ' + JSON.stringify(data));
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Upload failed:', error);
-                            image.status = '失败';
-                        });
-                    });
-                },
-                clearImages() {
-                    console.log('Clearing images');
-                    this.images = [];
-                    this.uploadedUrls = [];
-                },
-                copyToClipboard(text, event) {
-                    navigator.clipboard.writeText(text).then(() => {
-                        const button = event.target;
-                        const originalText = button.textContent;
-                        button.textContent = '已复制';
-                        setTimeout(() => {
-                            button.textContent = originalText;
-                        }, 2000);
-                    }).catch(err => {
-                        console.error('复制失败:', err);
-                    });
-                },
-                copyAllUrls() {
-                    const allUrls = this.uploadedUrls.map(result => result.url).join('\n');
-                    navigator.clipboard.writeText(allUrls).then(() => {
-                        alert('已复制全部链接');
-                    }).catch(err => {
-                        console.error('复制失败:', err);
-                    });
-                },
-                resetUploadState() {
-                    // 当切换上传服务时，将所有图片的状态重置为“等待中”
-                    console.log('Resetting upload state due to service change');
-                    this.images.forEach(image => {
-                        image.status = '等待中';
-                    });
-                    this.uploadedUrls = []; // 清空上传结果，以便可以重新上传
+                                                this.addFiles([blob]);
                 }
+            },
+            addFiles(files) {
+                for (let file of files) {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            this.images.push({
+                                file: file,
+                                name: file.name || 'pasted-image.png',
+                                status: '等待中',
+                                preview: e.target.result
+                            });
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        console.log('Not an image file:', file);
+                    }
+                }
+            },
+            uploadImages() {
+                const uploadUrl = this.uploadService === 'imgbb' ? 'https://api.imgbb.com/1/upload' : '/upload';
+                const apiKey = '670099fdeef8019b7624a39d6c4cc7d7'; // 示例 API 密钥
+
+                this.images.forEach(image => {
+                    if (image.status !== '等待中') return;
+                    image.status = '上传中';
+                    const formData = new FormData();
+
+                    if (this.uploadService === 'imgbb') {
+                        formData.append('key', apiKey);
+                        formData.append('image', image.file);
+                    } else {
+                        formData.append('file', image.file);
+                    }
+
+                    fetch(uploadUrl, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (this.uploadService === 'imgbb' && data.status === 200) {
+                            const fullUrl = data.data.url;
+                            this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
+                            image.status = '已完成';
+                        } else if (this.uploadService === 'telegraph' && data[0] && data[0].src) {
+                            const relativePath = data[0].src.startsWith('/file') ? data[0].src : `/file${data[0].src}`;
+                            const fullUrl = `${window.location.origin}${relativePath}`;
+                            this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
+                            image.status = '已完成';
+                        } else {
+                            throw new Error('Upload failed: ' + JSON.stringify(data));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Upload failed:', error);
+                        image.status = '失败';
+                    });
+                });
+            },
+            clearImages() {
+                this.images = [];
+                this.uploadedUrls = [];
+            },
+            copyToClipboard(text, event) {
+                navigator.clipboard.writeText(text).then(() => {
+                    const button = event.target;
+                    const originalText = button.textContent;
+                    button.textContent = '已复制';
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                    }, 2000);
+                }).catch(err => {
+                    console.error('复制失败:', err);
+                });
+            },
+            copyAllUrls() {
+                const allUrls = this.uploadedUrls.map(result => result.url).join('\n');
+                navigator.clipboard.writeText(allUrls).then(() => {
+                    alert('已复制全部链接');
+                }).catch(err => {
+                    console.error('复制失败:', err);
+                });
+            },
+            resetUploadState() {
+                this.images.forEach(image => {
+                    image.status = '等待中';
+                });
+                this.uploadedUrls = [];
+            },
+            generateHtmlCode(url) {
+                return `&lt;img src="${url}" alt="Image"&gt;`;
+            },
+            generateBBCode(url) {
+                return `[img]${url}[/img]`;
+            },
+            generateMarkdownCode(url) {
+                return `![Image](${url})`;
             }
         }
+    }
     </script>
 </body>
-
 </html>
