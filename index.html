@@ -91,6 +91,20 @@
             </ul>
         </div>
 
+        <!-- 上传按钮部分 -->
+        <div class="mt-6 flex justify-between items-center">
+            <button @click="uploadImages"
+                class="neumorphism bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
+                :disabled="images.length === 0" :class="{'opacity-50 cursor-not-allowed': images.length === 0}">
+                上传图片
+            </button>
+            <button @click="clearImages"
+                class="neumorphism bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+                :disabled="images.length === 0" :class="{'opacity-50 cursor-not-allowed': images.length === 0}">
+                清空列表
+            </button>
+        </div>
+
         <div class="mt-6" x-show="uploadedUrls.length > 0">
             <!-- 使用 flex 排列 "上传结果" 和 "复制全部链接" -->
             <div class="flex justify-between items-center mb-2">
@@ -148,6 +162,7 @@
                     console.log('Adding files:', files);
                     for (let file of files) {
                         if (file.type.startsWith('image/')) {
+                           
                             const reader = new FileReader();
                             reader.onload = (e) => {
                                 this.images.push({
