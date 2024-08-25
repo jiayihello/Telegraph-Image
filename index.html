@@ -20,6 +20,7 @@
             <select id="upload-service" x-model="uploadService" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
                 <option value="telegraph">Telegraph</option>
                 <option value="imgbb">ImgBB</option>
+                <option value="customAPI">Custom API</option>
             </select>
         </div>
 
@@ -81,13 +82,13 @@
                         <button @click="copyToClipboard(result.url, $event)"
                             class="text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap">
                             复制
-                    </button>
+                        </button>
                     </li>
                 </template>
             </ul>
         </div>
     </div>
-    
+
     <script>
         function imageUploader() {
             return {
@@ -95,7 +96,7 @@
                 uploadedUrls: [],
                 dragover: false,
                 uploadService: 'telegraph', // 默认上传服务
-    
+
                 handleDrop(e) {
                     this.dragover = false;
                     this.addFiles(e.dataTransfer.files);
@@ -129,63 +130,75 @@
                     }
                 },
                 uploadImages() {
-    const maxConcurrent = 2;
-    let inProgress = 0;
-    let index = 0;
+                    const maxConcurrent = 2;
+                    let inProgress = 0;
+                    let index = 0;
 
-    const uploadNext = () => {
-        if (index >= this.images.length) return;
-        if (inProgress >= maxConcurrent) return;
+                    const uploadNext = () => {
+                        if (index >= this.images.length) return;
+                        if (inProgress >= maxConcurrent) return;
 
-        const image = this.images[index];
-        if (image.status !== '等待中') {
-            index++;
-            uploadNext();
-            return;
-        }
+                        const image = this.images[index];
+                        if (image.status !== '等待中') {
+                            index++;
+                            uploadNext();
+                            return;
+                        }
 
-        inProgress++;
-        image.status = '上传中';
+                        inProgress++;
+                        image.status = '上传中';
 
-        const formData = new FormData();
-        formData.append('key', '670099fdeef8019b7624a39d6c4cc7d7');  // 使用你的ImgBB API key
-        formData.append('image', image.file);
-        // 可选参数，例如设置图片的过期时间（秒）
-        // formData.append('expiration', 600);  // 例如图片10分钟后过期
+                        const formData = new FormData();
+                        formData.append('image', image.file);
 
-        fetch('https://api.imgbb.com/1/upload', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 200) {
-                const fullUrl = data.data.url;  // 确保正确访问返回数据中的URL
-                this.uploadedUrls.push({
-                    url: fullUrl,
-                    preview: image.preview
-                });
-                image.status = '已完成';
-            } else {
-                throw new Error(data.error.message);
-            }
-        })
-        .catch(error => {
-            console.error('Upload failed:', error);
-            image.status = '失败';
-        })
-        .finally(() => {
-            inProgress--;
-            index++;
-            uploadNext();
-        });
+                        let fetchOptions = {
+                            method: 'POST',
+                            body: formData
+                        };
 
-        uploadNext();
-    };
+                        let uploadUrl = '';
+                        if (this.uploadService === 'imgbb') {
+                            formData.append('key', '670099fdeef8019b7624a39d6c4cc7d7');  // ImgBB API key
+                            uploadUrl = 'https://api.imgbb.com/1/upload';
+                        } else if (this.uploadService === 'customAPI') {
+                            fetchOptions.headers = {
+                                'Auth-Token': 'YOUR_FIXED_AUTH_TOKEN'  // 固定的Auth-Token
+                            };
+                            uploadUrl = 'https://i.111666.best/image';
+                        } else {
+                            uploadUrl = '/upload';  // Telegraph或其他服务
+                        }
 
-    for (let i = 0; i < maxConcurrent; i++) {
-        uploadNext();
-    }
+                        fetch(uploadUrl, fetchOptions)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 200 || (this.uploadService === 'customAPI' && data.status === 'success')) {
+                                const fullUrl = this.uploadService === 'customAPI' ? data.url : data.data.url;
+                                this.uploadedUrls.push({
+                                    url: fullUrl,
+                                    preview: image.preview
+                                });
+                                image.status = '已完成';
+                            } else {
+                                throw new Error(data.error ? data.error.message : 'Unknown error');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Upload failed:', error);
+                            image.status = '失败';
+                        })
+                        .finally(() => {
+                            inProgress--;
+                            index++;
+                            uploadNext();
+                        });
+
+                        uploadNext();
+                    };
+
+                    for (let i = 0; i < maxConcurrent; i++) {
+                        uploadNext();
+                    }
                 },
                 clearImages() {
                     this.images = [];
@@ -194,8 +207,10 @@
                 copyToClipboard(text, event) {
                     navigator.clipboard.writeText(text).then(() => {
                         const button = event.target;
-                        const originalText = button.textContent;
                         button.textContent = '已复制';
+                        setTimeout(() => {
+                            button.textContent = '复制';
+                        }, 2000);
                     }).catch(err => {
                         console.error('复制失败:', err);
                     });
@@ -203,7 +218,7 @@
                 copyAllUrls() {
                     const allUrls = this.uploadedUrls.map(result => result.url).join('\n');
                     navigator.clipboard.writeText(allUrls).then(() => {
-                        this.copyAllButtonText = '已复制全部';
+                        console.log('已复制全部');
                     }).catch(err => {
                         console.error('复制失败:', err);
                     });
@@ -213,3 +228,4 @@
     </script>
 </body>
 </html>
+
