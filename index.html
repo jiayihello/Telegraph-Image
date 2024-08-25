@@ -166,8 +166,9 @@
                                 this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
                                 image.status = '已完成';
                             } else if (this.uploadService === 'telegraph' && data[0] && data[0].src) {
-                                // 使用 Vercel 域名来访问文件
-                                const fullUrl = `${window.location.origin}/file${data[0].src}`;
+                                // 正确处理URL，避免重复的 '/file'
+                                const relativePath = data[0].src.startsWith('/file') ? data[0].src : `/file${data[0].src}`;
+                                const fullUrl = `${window.location.origin}${relativePath}`;
                                 this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
                                 image.status = '已完成';
                             } else {
