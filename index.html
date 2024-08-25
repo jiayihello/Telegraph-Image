@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="zh">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -37,11 +36,6 @@
             width: 100%;
         }
 
-        .code-input {
-            flex: 1;
-            margin-left: 10px;
-        }
-
         .preview-image {
             width: 50px;
             height: 50px;
@@ -59,7 +53,6 @@
         }
     </style>
 </head>
-
 <body class="min-h-screen flex flex-col items-center justify-start p-4" x-data="imageUploader()">
     <!-- 顶部导航栏 -->
     <header class="neumorphism w-full py-4 shadow-md">
@@ -168,7 +161,7 @@
                 images: [],
                 uploadedUrls: [],
                 dragover: false,
-                uploadService: 'telegraph',
+                uploadService: 'telegraph', // Default upload service
 
                 handleDrop(e) {
                     this.dragover = false;
@@ -187,15 +180,14 @@
                     }
                 },
                 addFiles(files) {
-                    let id = Date.now();
                     for (let file of files) {
                         if (file.type.startsWith('image/')) {
                             const reader = new FileReader();
                             reader.onload = (e) => {
                                 this.images.push({
-                                    id: id++,
+                                    id: Date.now(),
                                     file: file,
-                                    name: file.name || 'pasted-image.png',
+                                    name: file.name,
                                     status: '等待中',
                                     preview: e.target.result,
                                     url: ''
@@ -206,23 +198,23 @@
                     }
                 },
                 uploadImages() {
-                    const uploadUrl = this.uploadService === 'imgbb' ? 'https://api.imgbb.com/1/upload' : '/upload';
                     this.images.forEach(image => {
                         if (image.status !== '等待中') return;
                         image.status = '上传中';
                         const formData = new FormData();
-                        formData.append('image', image.file, image.name);
-                        formData.append('key', this.uploadService === 'imgbb' ? 'API_KEY' : ''); // 替换为您的 ImgBB API key
+                        formData.append('image', image.file);
+
+                        const uploadUrl = this.uploadService === 'imgbb' ? 'https://api.imgbb.com/1/upload?key=YOUR_API_KEY' : '/upload';
+
                         fetch(uploadUrl, {
                             method: 'POST',
                             body: formData
-                        }).then(response => {
-                            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                            return response.json();
-                        }).then(data => {
+                        })
+                        .then(response => response.json())
+                        .then(data => {
                             if (data.status === 200) {
                                 image.status = '已完成';
-                                image.url = data.data.url;
+                                image.url = this.uploadService === 'imgbb' ? data.data.url : data.path;
                                 this.uploadedUrls.push({
                                     url: image.url,
                                     preview: image.preview
@@ -230,7 +222,8 @@
                             } else {
                                 throw new Error('Upload failed');
                             }
-                        }).catch(error => {
+                        })
+                        .catch(error => {
                             console.error('Upload failed:', error);
                             image.status = '失败';
                         });
@@ -243,6 +236,7 @@
                 copyToClipboard(text, message, event) {
                     navigator.clipboard.writeText(text).then(() => {
                         console.log(`${message}: ${text}`);
+                        alert(message + ' copied to clipboard');
                     }).catch(err => {
                         console.error('Failed to copy:', err);
                     });
@@ -256,11 +250,17 @@
                         case 'markdown':
                             return `![uploaded image](${url})`;
                     }
+                },
+                resetUploadState() {
+                    this.images.forEach(image => {
+                        image.status = '等待中'; // Reset image status when switching upload services
+                    });
+                    this.uploadedUrls = [];
                 }
             }
         }
     </script>
 
 </body>
-
 </html>
+
