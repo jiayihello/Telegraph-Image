@@ -162,11 +162,11 @@
                         <!-- 代码选项 -->
                         <div class="flex-1 code-options">
                             <button @click="copyToClipboard(result.url, '图片链接', $event)"
-                                class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
+                                class="neum                                 orphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
                                 图片链接
                             </button>
                             <button @click="copyToClipboard(generateCode(result.url, 'html'), 'HTML', $event)"
-                                class="neumorphism bg-gray-                                200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
+                                class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
                                 HTML
                             </button>
                             <button @click="copyToClipboard(generateCode(result.url, 'bbcode'), 'BBCode', $event)"
@@ -255,6 +255,7 @@
                             return response.json();
                         })
                         .then(data => {
+                            console.log('Telegraph Response:', data); // 输出调试信息
                             if (this.uploadService === 'imgbb' && data.status === 200) {
                                 const fullUrl = data.data.url;
                                 this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
@@ -264,8 +265,7 @@
                                     this.showNotification('图片链接已复制到剪贴板');
                                 }
                             } else if (this.uploadService === 'telegraph' && Array.isArray(data) && data[0] && data[0].src) {
-                                const relativePath = data[0].src.startsWith('/file') ? data[0].src : `/file${data[0].src}`;
-                                const fullUrl = `${window.location.origin}${relativePath}`;
+                                const fullUrl = data[0].src.startsWith('http') ? data[0].src : `${window.location.origin}${data[0].src}`;
                                 this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
                                 image.status = '已完成';
                                 if (this.images.length === 1) {
