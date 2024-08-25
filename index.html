@@ -128,7 +128,7 @@
                         }
                     }
                 },
-                uploadImages() {
+uploadImages() {
     const maxConcurrent = 2;
     let inProgress = 0;
     let index = 0;
@@ -148,37 +148,66 @@
         image.status = '上传中';
 
         const formData = new FormData();
-        formData.append('key', '670099fdeef8019b7624a39d6c4cc7d7');  // 使用你的ImgBB API key
-        formData.append('image', image.file);
-        // 可选参数，例如设置图片的过期时间（秒）
-        // formData.append('expiration', 600);  // 例如图片10分钟后过期
-
-        fetch('https://api.imgbb.com/1/upload', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 200) {
-                const fullUrl = data.data.url;  // 确保正确访问返回数据中的URL
-                this.uploadedUrls.push({
-                    url: fullUrl,
-                    preview: image.preview
-                });
-                image.status = '已完成';
-            } else {
-                throw new Error(data.error.message);
-            }
-        })
-        .catch(error => {
-            console.error('Upload failed:', error);
-            image.status = '失败';
-        })
-        .finally(() => {
-            inProgress--;
-            index++;
-            uploadNext();
-        });
+        if (this.uploadService === 'imgbb') {
+            formData.append('key', '670099fdeef8019b7624a39d6c4cc7d7');  // 使用你的ImgBB API key
+            formData.append('image', image.file);
+            // ImgBB 上传请求
+            fetch('https://api.imgbb.com/1/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 200) {
+                    const fullUrl = data.data.url;  // 确保正确访问返回数据中的URL
+                    this.uploadedUrls.push({
+                        url: fullUrl,
+                        preview: image.preview
+                    });
+                    image.status = '已完成';
+                } else {
+                    throw new Error(data.error.message);
+                }
+            })
+            .catch(error => {
+                console.error('Upload failed:', error);
+                image.status = '失败';
+            })
+            .finally(() => {
+                inProgress--;
+                index++;
+                uploadNext();
+            });
+        } else if (this.uploadService === 'telegraph') {
+            formData.append('file', image.file);
+            // Telegraph 上传请求
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data[0] && data[0].src) {
+                    const fullUrl = `https://telegra.ph${data[0].src}`;
+                    this.uploadedUrls.push({
+                        url: fullUrl,
+                        preview: image.preview
+                    });
+                    image.status = '已完成';
+                } else {
+                    throw new Error('Unexpected response format');
+                }
+            })
+            .catch(error => {
+                console.error('Upload failed:', error);
+                image.status = '失败';
+            })
+            .finally(() => {
+                inProgress--;
+                index++;
+                uploadNext();
+            });
+        }
 
         uploadNext();
     };
@@ -186,6 +215,8 @@
     for (let i = 0; i < maxConcurrent; i++) {
         uploadNext();
     }
+}
+
                 },
                 clearImages() {
                     this.images = [];
