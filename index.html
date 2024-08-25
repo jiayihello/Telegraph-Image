@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="zh">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,25 +12,21 @@
         body {
             background: #f8f9fa;
         }
-
         .neumorphism {
             background: #ffffff;
             border-radius: 16px;
             box-shadow: 6px 6px 12px #e0e0e0, -6px -6px 12px #ffffff;
         }
-
         .neumorphism-inner {
             background: #ffffff;
             border-radius: 16px;
             box-shadow: inset 6px 6px 12px #e0e0e0, inset -6px -6px 12px #ffffff;
         }
-
         .neumorphism-hover:hover {
             box-shadow: 6px 6px 12px #e0e0e0, -6px -6px 12px #ffffff, inset 4px 4px 8px #e0e0e0, inset -4px -4px 8px #ffffff;
         }
     </style>
 </head>
-
 <body class="min-h-screen flex flex-col items-center justify-start p-4" x-data="imageUploader()">
     <!-- 顶部导航栏 -->
     <header class="neumorphism w-full py-4 shadow-md">
@@ -48,7 +43,6 @@
     <!-- 主内容区 -->
     <main class="neumorphism w-full max-w-4xl mt-6 p-8">
         <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">上传您的图片</h2>
-
         <div class="mt-4">
             <label for="upload-service" class="block text-sm font-medium text-gray-700">选择上传服务：</label>
             <select id="upload-service" x-model="uploadService"
@@ -84,7 +78,7 @@
                         }"></span>
                     </li>
                 </template>
-            </ul>
+                            </ul>
         </div>
 
         <!-- 上传按钮部分 -->
@@ -101,12 +95,10 @@
             </button>
         </div>
 
+        <!-- 显示上传结果和复制按钮 -->
         <div class="mt-6" x-show="uploadedUrls.length > 0">
             <div class="flex justify-between items-center mb-2">
                 <h3 class="text-lg font-semibold text-gray-700">上传结果</h3>
-                <button @click="copyAllUrls" class="text-sm text-blue-500 hover:text-blue-700">
-                    复制全部链接
-                </button>
             </div>
             <ul class="space-y-2">
                 <template x-for="(result, index) in uploadedUrls" :key="index">
@@ -114,13 +106,13 @@
                         <div class="flex items-center w-full">
                             <img :src="result.preview" alt="预览" class="w-10 h-10 object-cover mr-2 rounded">
                         </div>
-                        <div class="text-xs w-full mt-2">
+                        <div class="text-xs w-full mt-2 space-x-2">
                             <button @click="copyToClipboard(result.url)" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">复制链接</button>
                             <button @click="copyToClipboard(generateHtmlCode(result.url))" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">复制HTML</button>
                             <button @click="copyToClipboard(generateBBCode(result.url))" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">复制BBCode</button>
                             <button @click="copyToClipboard(generateMarkdownCode(result.url))" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">复制Markdown</button>
                         </div>
-                    </li
+                    </li>
                 </template>
             </ul>
         </div>
@@ -157,7 +149,7 @@
                             reader.onload = (e) => {
                                 this.images.push({
                                     file: file,
-                                                                       name: file.name,
+                                    name: file.name,
                                     status: '等待中',
                                     preview: e.target.result
                                 });
@@ -221,13 +213,10 @@
                 },
                 generateMarkdownCode(url) {
                     return `![Image](${url})`;
-                },
-                copyAllUrls() {
-                    const allUrls = this.uploadedUrls.map(result => result.url).join('\n');
-                    this.copyToClipboard(allUrls);
                 }
             }
         }
     </script>
 </body>
 </html>
+
