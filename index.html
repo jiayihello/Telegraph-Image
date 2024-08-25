@@ -149,9 +149,9 @@ uploadImages() {
 
         const formData = new FormData();
         if (this.uploadService === 'imgbb') {
+            // 使用 ImgBB 的 API 上传
             formData.append('key', '670099fdeef8019b7624a39d6c4cc7d7');  // 使用你的ImgBB API key
             formData.append('image', image.file);
-            // ImgBB 上传请求
             fetch('https://api.imgbb.com/1/upload', {
                 method: 'POST',
                 body: formData
@@ -178,9 +178,10 @@ uploadImages() {
                 index++;
                 uploadNext();
             });
+
         } else if (this.uploadService === 'telegraph') {
+            // 使用 Telegraph 的 API 上传
             formData.append('file', image.file);
-            // Telegraph 上传请求
             fetch('/upload', {
                 method: 'POST',
                 body: formData
@@ -216,6 +217,7 @@ uploadImages() {
         uploadNext();
     }
 }
+
 
                 },
                 clearImages() {
