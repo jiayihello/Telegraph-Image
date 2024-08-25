@@ -34,6 +34,10 @@
                         inset 4px 4px 8px #e0e0e0,
                         inset -4px -4px 8px #ffffff;
         }
+
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 
@@ -88,7 +92,7 @@
                             'text-red-500': image.status === '失败'
                         }"></span>
                     </li>
-                </template>
+                                    </template>
             </ul>
         </div>
 
@@ -142,128 +146,113 @@
                 uploadService: 'telegraph', // 默认上传服务
 
                 handleDrop(e) {
-                    console.log('Files dropped:', e.dataTransfer.files);
                     this.dragover = false;
                     this.addFiles(e.dataTransfer.files);
                 },
                 handleFileSelect(e) {
-                    console.log('File selected:', e.target.files);
                     this.addFiles(e.target.files);
                 },
                 handlePaste(e) {
-                    console.log('Files pasted:',e.clipboardData.items);
                     const items = e.clipboardData.items;
                     for (let item of items) {
                         if (item.type.indexOf('image') !== -1) {
                             const blob = item.getAsFile();
-                                                this.addFiles([blob]);
-                }
-            },
-            addFiles(files) {
-                for (let file of files) {
-                    if (file.type.startsWith('image/')) {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            this.images.push({
-                                file: file,
-                                name: file.name || 'pasted-image.png',
-                                status: '等待中',
-                                preview: e.target.result
-                            });
-                        };
-                        reader.readAsDataURL(file);
-                    } else {
-                        console.log('Not an image file:', file);
-                    }
-                }
-            },
-            uploadImages() {
-                const uploadUrl = this.uploadService === 'imgbb' ? 'https://api.imgbb.com/1/upload' : '/upload';
-                const apiKey = '670099fdeef8019b7624a39d6c4cc7d7'; // 示例 API 密钥
-
-                this.images.forEach(image => {
-                    if (image.status !== '等待中') return;
-                    image.status = '上传中';
-                    const formData = new FormData();
-
-                    if (this.uploadService === 'imgbb') {
-                        formData.append('key', apiKey);
-                        formData.append('image', image.file);
-                    } else {
-                        formData.append('file', image.file);
-                    }
-
-                    fetch(uploadUrl, {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
+                            this.addFiles([blob]);
                         }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (this.uploadService === 'imgbb' && data.status === 200) {
-                            const fullUrl = data.data.url;
-                            this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
-                            image.status = '已完成';
-                        } else if (this.uploadService === 'telegraph' && data[0] && data[0].src) {
-                            const relativePath = data[0].src.startsWith('/file') ? data[0].src : `/file${data[0].src}`;
-                            const fullUrl = `${window.location.origin}${relativePath}`;
-                            this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
-                            image.status = '已完成';
+                    }
+                },
+                addFiles(files) {
+                    for (let file of files) {
+                        if (file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                this.images.push({
+                                    file: file,
+                                    name: file.name || 'pasted-image.png',
+                                    status: '等待中',
+                                    preview: e.target.result
+                                });
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    }
+                },
+                uploadImages() {
+                    const uploadUrl = this.uploadService === 'imgbb' ? 'https://api.imgbb.com/1/upload' : '/upload';
+                    const apiKey = '您的API密钥';  // 仅imgbb需要
+
+                    this.images.forEach(image => {
+                        if (image.status !== '等待中') return;
+                        image.status = '上传中';
+                        const formData = new FormData();
+
+                        if (this.uploadService === 'imgbb') {
+                            formData.append('key', apiKey);
+                            formData.append('image', image.file);
                         } else {
-                            throw new Error('Upload failed: ' + JSON.stringify(data));
+                            formData.append('file', image.file);
                         }
-                    })
-                    .catch(error => {
-                        console.error('Upload failed:', error);
-                        image.status = '失败';
+
+                        fetch(uploadUrl, {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (this.uploadService === 'imgbb' && data.status === 200) {
+                                const fullUrl = data.data.url;
+                                this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
+                                image.status = '已完成';
+                            } else if (this.uploadService === 'telegraph' && data[0] && data[0].src) {
+                                const fullUrl = `${window.location.origin}${data[0].src}`;
+                                this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
+                                image.status = '已完成';
+                            } else {
+                                throw new Error('Upload failed: ' + JSON.stringify(data));
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Upload failed:', error);
+                            image.status = '失败';
+                        });
                     });
-                });
-            },
-            clearImages() {
-                this.images = [];
-                this.uploadedUrls = [];
-            },
-            copyToClipboard(text, event) {
-                navigator.clipboard.writeText(text).then(() => {
-                    const button = event.target;
-                    const originalText = button.textContent;
-                    button.textContent = '已复制';
-                    setTimeout(() => {
-                        button.textContent = originalText;
-                    }, 2000);
-                }).catch(err => {
-                    console.error('复制失败:', err);
-                });
-            },
-            copyAllUrls() {
-                const allUrls = this.uploadedUrls.map(result => result.url).join('\n');
-                navigator.clipboard.writeText(allUrls).then(() => {
-                    alert('已复制全部链接');
-                }).catch(err => {
-                    console.error('复制失败:', err);
-                });
-            },
-            resetUploadState() {
-                this.images.forEach(image => {
-                    image.status = '等待中';
-                });
-                this.uploadedUrls = [];
-            },
-            generateHtmlCode(url) {
-                return `&lt;img src="${url}" alt="Image"&gt;`;
-            },
-            generateBBCode(url) {
-                return `[img]${url}[/img]`;
-            },
-            generateMarkdownCode(url) {
-                return `![Image](${url})`;
+                },
+                clearImages() {
+                    this.images = [];
+                    this.uploadedUrls = [];
+                },
+                copyAllUrls() {
+                    const allUrls = this.uploadedUrls.map(result => result.url).join('\n');
+                    navigator.clipboard.writeText(allUrls).then(() => {
+                        alert('已复制全部链接');
+                    }).catch(err => {
+                        console.error('复制失败:', err);
+                    });
+                },
+                resetUploadState() {
+                    this.images.forEach(image => {
+                        image.status = '等待中';
+                    });
+                    this.uploadedUrls = [];
+                },
+                generateHtmlCode(url) {
+                    return `&lt;img src="${url}" alt="Image"&gt;`;
+                },
+                generateBBCode(url) {
+                    return `[img]${url}[/img]`;
+                },
+                generateMarkdownCode(url) {
+                    return `![Image](${url})`;
+                }
             }
         }
-    }
     </script>
 </body>
+
 </html>
+
