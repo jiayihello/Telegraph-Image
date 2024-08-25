@@ -3,6 +3,7 @@
     "routes": [
       {"src": "/","dest": "/index.html"},
       {"src": "/upload","dest": "https://telegra.ph/upload"},
-      {"src": "/file/(.*)","dest": "https://telegra.ph/file/$1"}
+      {"src": "/file/(.*)","dest": "https://telegra.ph/file/$1"},
+      {"src": "/imgbb-upload","dest": "https://zh-cn.imgbb.com/json"}
     ]
 }
