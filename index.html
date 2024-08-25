@@ -118,105 +118,112 @@
         </div>
     </main>
 
-    <script>
-        function imageUploader() {
-            return {
-                images: [],
-                uploadedUrls: [],
-                dragover: false,
-                uploadService: 'telegraph',
+   <script>
+    function imageUploader() {
+        return {
+            images: [],
+            uploadedUrls: [],
+            dragover: false,
+            uploadService: 'telegraph',
 
-                handleDrop(e) {
-                    this.dragover = false;
-                    this.addFiles(e.dataTransfer.files);
-                },
-                handleFileSelect(e) {
-                    this.addFiles(e.target.files);
-                },
-                handlePaste(e) {
-                    const items = e.clipboardData.items;
-                    for (let item of items) {
-                        if (item.type.indexOf('image') !== -1) {
-                            const blob = item.getAsFile();
-                            this.addFiles([blob]);
-                        }
+            handleDrop(e) {
+                this.dragover = false;
+                this.addFiles(e.dataTransfer.files);
+            },
+            handleFileSelect(e) {
+                this.addFiles(e.target.files);
+            },
+            handlePaste(e) {
+                const items = e.clipboardData.items;
+                for (let item of items) {
+                    if (item.type.indexOf('image') !== -1) {
+                        const blob = item.getAsFile();
+                        this.addFiles([blob]);
                     }
-                },
-                addFiles(files) {
-                    for (let file of files) {
-                        if (file.type.startsWith('image/')) {
-                            const reader = new FileReader();
-                            reader.onload = (e) => {
-                                this.images.push({
-                                    file: file,
-                                    name: file.name,
-                                    status: '等待中',
-                                    preview: e.target.result
-                                });
-                            };
-                            reader.readAsDataURL(file);
-                        }
-                    }
-                },
-                uploadImages() {
-                    const uploadUrl = this.uploadService === 'imgbb' ? 'https://api.imgbb.com/1/upload' : '/upload';
-                    this.images.forEach(image => {
-                        if (image.status !== '等待中') return;
-                        image.status = '上传中';
-                        const formData = new FormData();
-                        formData.append('image', image.file);
-
-                        if (this.uploadService === 'imgbb') {
-                            formData.append('key', 'YOUR_API_KEY'); // Replace 'YOUR_API_KEY' with your actual imgbb API key
-                        }
-
-                        fetch(uploadUrl, {
-                            method: 'POST',
-                            body: formData
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.error) {
-                                image.status = '失败';
-                                console.error('Upload error:', data.error.message);
-                            } else {
-                                image.status = '已完成';
-                                const uploadedUrl = this.uploadService === 'imgbb' ? data.data.url : data.url; // Adjust according to the response structure
-                                this.uploadedUrls.push({
-                                    url: uploadedUrl,
-                                    preview: image.preview
-                                });
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Upload failed:', error);
-                            image.status = '失败';
-                        });
-                    });
-                },
-                clearImages() {
-                    this.images = [];
-                    this.uploadedUrls = [];
-                },
-                copyToClipboard(text) {
-                    navigator.clipboard.writeText(text).then(() => {
-                        alert('内容已复制到剪贴板');
-                    }).catch(err => {
-                        alert('复制失败: ' + err);
-                    });
-                },
-                generateHtmlCode(url) {
-                    return `<img src="${url}" alt="Image">`;
-                },
-                generateBBCode(url) {
-                    return `[img]${url}[/img]`;
-                },
-                generateMarkdownCode(url) {
-                    return `![Image](${url})`;
                 }
+            },
+            addFiles(files) {
+                for (let file of files) {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            this.images.push({
+                                file: file,
+                                name: file.name,
+                                status: '等待中',
+                                preview: e.target.result
+                            });
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                }
+            },
+            uploadImages() {
+                const uploadUrl = this.uploadService === 'imgbb' ? 'https://api.imgbb.com/1/upload' : '/upload';
+                this.images.forEach(image => {
+                    if (image.status !== '等待中') return;
+                    image.status = '上传中';
+                    const formData = new FormData();
+                    formData.append('image', image.file);
+
+                    if (this.uploadService === 'imgbb') {
+                        formData.append('key', 'YOUR_API_KEY'); // Replace 'YOUR_API_KEY' with your actual imgbb API key
+                    }
+
+                    fetch(uploadUrl, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            image.status = '失败';
+                            console.error('Upload error:', data.error.message);
+                        } else {
+                            image.status = '已完成';
+                            const uploadedUrl = this.uploadService === 'imgbb' ? data.data.url : data.url;
+                            this.uploadedUrls.push({
+                                url: uploadedUrl,
+                                preview: image.preview
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Upload failed:', error);
+                        image.status = '失败';
+                    });
+                });
+            },
+            clearImages() {
+                this.images = [];
+                this.uploadedUrls = [];
+            },
+            resetUploadState() {
+                this.images.forEach(image => {
+                    image.status = '等待中';
+                });
+                this.uploadedUrls = [];
+            },
+            copyToClipboard(text) {
+                navigator.clipboard.writeText(text).then(() => {
+                    alert('内容已复制到剪贴板');
+                }).catch(err => {
+                    alert('复制失败: ' + err);
+                });
+            },
+            generateHtmlCode(url) {
+                return `<img src="${url}" alt="Image">`;
+            },
+            generateBBCode(url) {
+                return `[img]${url}[/img]`;
+            },
+            generateMarkdownCode(url) {
+                return `![Image](${url})`;
             }
         }
-    </script>
+    }
+</script>
+
 </body>
 </html>
 
