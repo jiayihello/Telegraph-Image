@@ -15,6 +15,14 @@
     <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-4xl">
         <h1 class="text-2xl font-bold mb-6 text-center text-gray-800">Telegraph图床</h1>
 
+        <div class="mt-4">
+            <label for="upload-service" class="block text-sm font-medium text-gray-700">选择上传服务：</label>
+            <select id="upload-service" x-model="uploadService" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                <option value="telegraph">Telegraph</option>
+                <option value="imgbb">ImgBB</option>
+            </select>
+        </div>
+
         <div class="border-dashed border-2 border-gray-400 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition duration-300"
             @click="$refs.fileInput.click()" @dragover.prevent="dragover = true" @dragleave.prevent="dragover = false"
             @drop.prevent="handleDrop" @paste.prevent="handlePaste" :class="{'border-blue-500': dragover}">
@@ -73,19 +81,21 @@
                         <button @click="copyToClipboard(result.url, $event)"
                             class="text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap">
                             复制
-                        </button>
+                    </button>
                     </li>
                 </template>
             </ul>
         </div>
     </div>
-
+    
     <script>
         function imageUploader() {
             return {
                 images: [],
                 uploadedUrls: [],
                 dragover: false,
+                uploadService: 'telegraph', // 默认上传服务
+    
                 handleDrop(e) {
                     this.dragover = false;
                     this.addFiles(e.dataTransfer.files);
@@ -122,25 +132,26 @@
                     const maxConcurrent = 2;
                     let inProgress = 0;
                     let index = 0;
-
+    
                     const uploadNext = () => {
                         if (index >= this.images.length) return;
                         if (inProgress >= maxConcurrent) return;
-
+    
                         const image = this.images[index];
                         if (image.status !== '等待中') {
                             index++;
                             uploadNext();
                             return;
                         }
-
+    
                         inProgress++;
                         image.status = '上传中';
-
+    
                         const formData = new FormData();
                         formData.append('file', image.file, 'blob');
-
-                        fetch('./upload', {
+                        const uploadUrl = this.uploadService === 'imgbb' ? '/imgbb-upload' : '/upload';
+    
+                        fetch(uploadUrl, {
                             method: 'POST',
                             headers: {
                                 'Accept': 'application/json, text/javascript, */*; q=0.01',
@@ -148,32 +159,29 @@
                             },
                             body: formData
                         })
-                            .then(response => response.json())
-                            .then(data => {
-                                image.status = '已完成';
-                                if (data && data[0] && data[0].src) {
-                                    const fullUrl = new URL(data[0].src, window.location.href).href;
-                                    this.uploadedUrls.push({
-                                        url: fullUrl,
-                                        preview: image.preview
-                                    });
-                                } else {
-                                    throw new Error('Invalid response format');
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Upload failed:', error);
-                                image.status = '失败';
-                            })
-                            .finally(() => {
-                                inProgress--;
-                                index++;
-                                uploadNext();
+                        .then(response => response.json())
+                        .then(data => {
+                            image.status = '已完成';
+                            const imgUrl = this.uploadService === 'imgbb' ? data.image.url : data[0].src;
+                            const fullUrl = new URL(imgUrl, window.location.href).href;
+                            this.uploadedUrls.push({
+                                url: fullUrl,
+                                preview: image.preview
                             });
-
+                        })
+                        .catch(error => {
+                            console.error('Upload failed:', error);
+                            image.status = '失败';
+                        })
+                        .finally(() => {
+                            inProgress--;
+                            index++;
+                            uploadNext();
+                        });
+    
                         uploadNext();
                     };
-
+    
                     for (let i = 0; i < maxConcurrent; i++) {
                         uploadNext();
                     }
@@ -191,7 +199,7 @@
                         console.error('复制失败:', err);
                     });
                 },
-                copyAllUrls(event) {
+                copyAllUrls() {
                     const allUrls = this.uploadedUrls.map(result => result.url).join('\n');
                     navigator.clipboard.writeText(allUrls).then(() => {
                         this.copyAllButtonText = '已复制全部';
@@ -203,5 +211,4 @@
         }
     </script>
 </body>
-
 </html>
