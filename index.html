@@ -9,10 +9,30 @@
         integrity="sha512-nIwdJlD5/vHj23CbO2iHCXtsqzdTTx3e3uAmpTm4x2Y8xCIFyWu4cSIV8GaGe2UNVq86/1h9EgUZy7tn243qdA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
-        body { background: #f8f9fa; }
-        .neumorphism { background: #ffffff; border-radius: 16px; box-shadow: 6px 6px 12px #e0e0e0, -6px -6px 12px #ffffff; }
-        .neumorphism-inner { background: #ffffff; border-radius: 16px; box-shadow: inset 6px 6px 12px #e0e0e0, inset -6px -6px 12px #ffffff; }
-        .neumorphism-hover:hover { box-shadow: 6px 6px 12px #e0e0e0, -6px -6px 12px #ffffff, inset 4px 4px 8px #e0e0e0, inset -4px -4px 8px #ffffff; }
+        body {
+            background: #f8f9fa; /* 更浅的背景颜色 */
+        }
+
+        .neumorphism {
+            background: #ffffff; /* 纯白色背景 */
+            border-radius: 16px;
+            box-shadow: 6px 6px 12px #e0e0e0, /* 浅灰色阴影 */
+                        -6px -6px 12px #ffffff; /* 白色高光 */
+        }
+
+        .neumorphism-inner {
+            background: #ffffff; /* 纯白色背景 */
+            border-radius: 16px;
+            box-shadow: inset 6px 6px 12px #e0e0e0, /* 内阴影 */
+                        inset -6px -6px 12px #ffffff; /* 内高光 */
+        }
+
+        .neumorphism-hover:hover {
+            box-shadow: 6px 6px 12px #e0e0e0,
+                        -6px -6px 12px #ffffff,
+                        inset 4px 4px 8px #e0e0e0,
+                        inset -4px -4px 8px #ffffff;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-start p-4" x-data="imageUploader()">
@@ -43,12 +63,13 @@
 
         <div class="neumorphism-hover border-dashed border-4 border-gray-300 rounded-lg p-8 text-center cursor-pointer transition duration-300 mt-6"
             @click="$refs.fileInput.click()" @dragover.prevent="dragover = true" @dragleave.prevent="dragover = false"
-            @drop.prevent="handleDrop" @paste.prevent="handlePaste" :class="{'neumorphism-inner': dragover}">
+            @drop.prevent="handleDrop($event)" @paste.prevent="handlePaste($event)" :class="{'neumorphism-inner': dragover}">
             <input type="file" class="hidden" x-ref="fileInput" @change="handleFileSelect" multiple accept="image/*">
             <p class="text-gray-600"><strong>点击</strong> 或 <strong>拖拽</strong>图片到此处上传</p>
             <p class="text-sm text-gray-500">支持多张图片同时上传</p>
         </div>
 
+        <!-- 上传列表和按钮 -->
         <div class="mt-6" x-show="images.length > 0">
             <h3 class="text-lg font-semibold mb-2 text-gray-700">上传列表</h3>
             <ul class="space-y-2">
@@ -65,11 +86,10 @@
                             'text-red-500': image.status === '失败'
                         }"></span>
                     </li>
-                </template>
+                                    </template>
             </ul>
         </div>
 
-        <!-- 上传按钮部分 -->
         <div class="mt-6 flex justify-between items-center">
             <button @click="uploadImages"
                 class="neumorphism bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
@@ -84,24 +104,18 @@
         </div>
 
         <div class="mt-6" x-show="uploadedUrls.length > 0">
-            <!-- 使用 flex 排列 "上传结果" 和 "复制全部链接" -->
-            <div class="flex justify-between items-center mb-2">
-                <h3 class="text-lg font-semibold text-gray-700">上传结果</h3>
-                <button @click="copyAllUrls" class="text-sm text-blue-500 hover:text-blue-700">
-                    复制全部链接
-                </button>
-            </div>
+            <h3 class="text-lg font-semibold mb-2 text-gray-700">上传结果</h3>
             <ul class="space-y-2">
                 <template x-for="(result, index) in uploadedUrls" :key="index">
                     <li class="neumorphism flex items-center justify-between p-2 rounded shadow-sm">
-                        <div class="flex items-center flex-grow mr-2">
+                        <div class="flex items-center">
                             <img :src="result.preview" alt="预览" class="w-10 h-10 object-cover mr-2 rounded">
                             <a :href="result.url" target="_blank" class="text-sm text-blue-500 hover:underline truncate"
                                 x-text="result.url"></a>
                         </div>
                         <button @click="copyToClipboard(result.url, $event)"
-                            class="text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap">
-                            复制
+                            class="text-sm text-gray-500 hover:text-gray-700">
+                            复制链接
                         </button>
                     </li>
                 </template>
@@ -140,14 +154,12 @@
                             reader.onload = (e) => {
                                 this.images.push({
                                     file: file,
-                                    name: file.name || 'pasted-image.png',
+                                    name: file.name,
                                     status: '等待中',
                                     preview: e.target.result
                                 });
                             };
                             reader.readAsDataURL(file);
-                        } else {
-                            console.log('Not an image file:', file);
                         }
                     }
                 },
@@ -171,17 +183,9 @@
                             return response.json();
                         })
                         .then(data => {
-                            if (this.uploadService === 'imgbb' && data.status === 200) {
+                            if (data.status === 200) {
                                 image.status = '已完成';
                                 image.url = data.data.url;
-                                this.uploadedUrls.push({
-                                    url: image.url,
-                                    preview: image.preview
-                                });
-                            } else if (this.uploadService === 'telegraph') {
-                                // Handle response for Telegraph if different from ImgBB
-                                image.status = '已完成';
-                                image.url = data.url; // Assuming 'data.url' is the correct response format
                                 this.uploadedUrls.push({
                                     url: image.url,
                                     preview: image.preview
@@ -200,29 +204,12 @@
                     this.images = [];
                     this.uploadedUrls = [];
                 },
-                copyToClipboard(text, event) {
-                    navigator.clipboard.writeText(text).then(() => {
-                        event.target.textContent = '已复制';
-                        setTimeout(() => {
-                            event.target.textContent = '复制';
-                        }, 2000);
+                copyToClipboard(url, event) {
+                    navigator.clipboard.writeText(url).then(() => {
+                        alert('链接已复制到剪贴板');
                     }).catch(err => {
                         console.error('Failed to copy:', err);
                     });
-                },
-                copyAllUrls() {
-                    const allUrls = this.uploadedUrls.map(result => result.url).join('\n');
-                    navigator.clipboard.writeText(allUrls).then(() => {
-                        alert('已复制全部链接');
-                    }).catch(err => {
-                        console.error('Failed to copy:', err);
-                    });
-                },
-                resetUploadState() {
-                    this.images.forEach(image => {
-                        image.status = '等待中';
-                    });
-                    this.uploadedUrls = [];
                 }
             }
         }
