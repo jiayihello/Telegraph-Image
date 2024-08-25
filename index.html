@@ -162,133 +162,127 @@
         </div>
     </main>
 
-    <script>
-        function imageUploader() {
-            return {
-                images: [],
-                uploadedUrls: [],
-                dragover: false,
-                uploadService: 'telegraph',
+   <script>
+    function imageUploader() {
+        return {
+            images: [],
+            uploadedUrls: [],
+            dragover: false,
+            uploadService: 'telegraph',
 
-                handleDrop(e) {
-                    this.dragover = false;
-                    this.addFiles(e.dataTransfer.files);
-                },
-                handleFileSelect(e) {
-                    this.addFiles(e.target.files);
-                },
-                handlePaste(e) {
-                    const items = e.clipboardData.items;
-                    for (let item of items) {
-                        if (item.type.indexOf('image') !== -1) {
-                            const blob = item.getAsFile();
-                            this.addFiles([blob]);
-                        }
-                    }
-                },
-                addFiles(files) {
-                    for (let file of files) {
-                        if (file.type.startsWith('image/')) {
-                            const reader = new FileReader();
-                            reader.onload = (e) => {
-                                this.images.push({
-                                    file: file,
-                                    name: file.name || 'pasted-image.png',
-                                    status: '等待中',
-                                    preview: e.target.result, // 文件选择时的预览图
-                                    url: '' // 用于保存上传后的URL
-                                });
-                            };
-                            reader.readAsDataURL(file);
-                        } else {
-                            console.log('Not an image file:', file);
-                        }
-                    }
-                },
-                uploadImages() {
-                    const uploadUrl = this.uploadService === 'imgbb' ? 'https://api.imgbb.com/1/upload' : '/upload';
-                    const apiKey = '670099fdeef8019b7624a39d6c4cc7d7'; // 只有 imgbb 使用
-
-                    this.images.forEach(image => {
-                        if (image.status !== '等待中') return;
-
-                        image.status = '上传中';
-                        const formData = new FormData();
-
-                        if (this.uploadService === 'imgbb') {
-                            formData.append('key', apiKey);
-                            formData.append('image', image.file);
-                        } else {
-                            formData.append('file', image.file); // Telegraph 使用 'file' 作为字段名
-                        }
-
-                        fetch(uploadUrl, {
-                            method: 'POST',
-                            body: formData
-                        })
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error(`HTTP error! status: ${response.status}`);
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            if (this.uploadService === 'imgbb' && data.status === 200) {
-                                const fullUrl = data.data.url;
-                                this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
-                                image.status = '已完成';
-                                this.copyToClipboard(fullUrl); // 自动复制到剪贴板
-                                alert('图片链接已复制到剪贴板');
-                            } else if (this.uploadService === 'telegraph' && Array.isArray(data) && data[0] && data[0].src) {
-                                const relativePath = data[0].src.startsWith('/file') ? data[0].src : `/file${data[0].src}`;
-                                const fullUrl = `${window.location.origin}${relativePath}`;
-                                this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
-                                image.status = '已完成';
-                                this.copyToClipboard(fullUrl); // 自动复制到剪贴板
-                                alert('图片链接已复制到剪贴板');
-                            } else {
-                                throw new Error('Upload failed: ' + JSON.stringify(data));
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Upload failed:', error);
-                            image.status = '失败';
-                        });
-                    });
-                },
-                clearImages() {
-                    this.images = [];
-                    this.uploadedUrls = [];
-                },
-                copyToClipboard(text) {
-                    navigator.clipboard.writeText(text).then(() => {
-                        console.log('Text copied to clipboard: ', text);
-                    }).catch(err => {
-                        console.error('复制失败:', err);
-                    });
-                },
-                resetUploadState() {
-                    this.images.forEach(image => {
-                        image.status = '等待中';
-                        image.url = ''; // 清空之前的URL
-                    });
-                    this.uploadedUrls = [];
-                },
-                generateCode(url, codeType) {
-                    switch (codeType) {
-                        case 'html':
-                            return `<img src="${url}" alt="Image" />`;
-                        case 'bbcode':
-                            return `[img]${url}[/img]`;
-                        case 'markdown':
-                            return `![Image](${url})`;
-                        default:
-                            return url;
+            handleDrop(e) {
+                this.dragover = false;
+                this.addFiles(e.dataTransfer.files);
+            },
+            handleFileSelect(e) {
+                this.addFiles(e.target.files);
+            },
+            handlePaste(e) {
+                const items = e.clipboardData.items;
+                for (let item of items) {
+                    if (item.type.indexOf('image') !== -1) {
+                        const blob = item.getAsFile();
+                        this.addFiles([blob]);
                     }
                 }
+            },
+            addFiles(files) {
+                for (let file of files) {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            this.images.push({
+                                file: file,
+                                name: file.name || 'pasted-image.png',
+                                status: '等待中',
+                                preview: e.target.result, // 文件选择时的预览图
+                                url: '' // 用于保存上传后的URL
+                            });
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        console.log('Not an image file:', file);
+                    }
+                }
+            },
+            uploadImages() {
+                const uploadUrl = this.uploadService === 'imgbb' ? 'https://api.imgbb.com/1/upload' : '/upload';
+                const apiKey = '670099fdeef8019b7624a39d6c4cc7d7'; // 只有 imgbb 使用
+
+                this.images.forEach(image => {
+                    if (image.status !== '等待中') return;
+
+                    image.status = '上传中';
+                    const formData = new FormData();
+
+                    if (this.uploadService === 'imgbb') {
+                        formData.append('key', apiKey);
+                        formData.append('image', image.file);
+                    } else {
+                        formData.append('file', image.file); // Telegraph 使用 'file' 作为字段名
+                    }
+
+                    fetch(uploadUrl, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (this.uploadService === 'imgbb' && data.status === 200) {
+                            const fullUrl = data.data.url;
+                            this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
+                            image.status = '已完成';
+                            if (this.images.length === 1) { // 只有一张图片时自动复制
+                                this.copyToClipboard(fullUrl, '图片链接已复制到剪贴板');
+                            }
+                        } else if (this.uploadService === 'telegraph' && Array.isArray(data) && data[0] && data[0].src) {
+                            const relativePath = data[0].src.startsWith('/file') ? data[0].src : `/file${data[0].src}`;
+                            const fullUrl = `${window.location.origin}${relativePath}`;
+                            this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
+                            image.status = '已完成';
+                            if (this.images.length === 1) { // 只有一张图片时自动复制
+                                this.copyToClipboard(fullUrl, '图片链接已复制到剪贴板');
+                            }
+                        } else {
+                            throw new Error('Upload failed: ' + JSON.stringify(data));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Upload failed:', error);
+                        image.status = '失败';
+                    });
+                });
+            },
+            clearImages() {
+                this.images = [];
+                this.uploadedUrls = [];
+            },
+            copyToClipboard(text, message) {
+                navigator.clipboard.writeText(text).then(() => {
+                    console.log('Text copied to clipboard: ', text);
+                    this.showNotification(message);
+                }).catch(err => {
+                    console.error('复制失败:', err);
+                });
+            },
+            showNotification(message) {
+                const notification = document.createElement('div');
+                notification.textContent = message;
+                notification.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #ffffff; padding: 10px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);';
+                document.body.appendChild(notification);
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 1000); // 1秒后自动消失
             }
         }
-    </script>
+    }
+</script>
+
 </body>
 
 </html>
