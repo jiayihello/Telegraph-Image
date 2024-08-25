@@ -130,42 +130,53 @@
                     }
                 },
                 uploadImages() {
-                    const uploadUrl = this.uploadService === 'imgbb' ? 'https://api.imgbb.com/1/upload' : '/upload';
-                    const apiKey = '670099fdeef8019b7624a39d6c4cc7d7'; // 只有 imgbb 使用
+    const uploadUrl = this.uploadService === 'imgbb' ? 'https://api.imgbb.com/1/upload' : '/upload';
+    const apiKey = '670099fdeef8019b7624a39d6c4cc7d7'; // 只有 imgbb 使用
 
-                    this.images.forEach(image => {
-                        if (image.status !== '等待中') return;
+    this.images.forEach(image => {
+        if (image.status !== '等待中') return;
 
-                        image.status = '上传中';
-                        const formData = new FormData();
+        image.status = '上传中';
+        const formData = new FormData();
 
-                        if (this.uploadService === 'imgbb') {
-                            formData.append('key', apiKey);
-                            formData.append('image', image.file);
-                        } else {
-                            formData.append('file', image.file);
-                        }
+        if (this.uploadService === 'imgbb') {
+            formData.append('key', apiKey);
+            formData.append('image', image.file);
+        } else {
+            formData.append('file', image.file);
+        }
 
-                        fetch(uploadUrl, {
-                            method: 'POST',
-                            body: formData
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if ((this.uploadService === 'imgbb' && data.status === 200) || (this.uploadService === 'telegraph' && data[0] && data[0].src)) {
-                                const fullUrl = this.uploadService === 'imgbb' ? data.data.url : `https://telegra.ph${data[0].src}`;
-                                this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
-                                image.status = '已完成';
-                            } else {
-                                throw new Error('Upload failed');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Upload failed:', error);
-                            image.status = '失败';
-                        });
-                    });
-                },
+        fetch(uploadUrl, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (this.uploadService === 'imgbb' && data.status === 200) {
+                const fullUrl = data.data.url;
+                this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
+                image.status = '已完成';
+            } else if (this.uploadService === 'telegraph' && data[0] && data[0].src) {
+                // 使用 Vercel 域名来访问文件
+                const fullUrl = `${window.location.origin}/file${data[0].src}`;
+                this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
+                image.status = '已完成';
+            } else {
+                throw new Error('Upload failed: ' + JSON.stringify(data));
+            }
+        })
+        .catch(error => {
+            console.error('Upload failed:', error);
+            image.status = '失败';
+        });
+    });
+}
+
                 clearImages() {
                     this.images = [];
                     this.uploadedUrls = [];
