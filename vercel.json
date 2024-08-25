@@ -1,10 +1,9 @@
 {
     "version": 2,
     "routes": [
-        {"src": "/", "dest": "/index.html"},
-        {"src": "/upload", "dest": "https://telegra.ph/upload"},
-        {"src": "/file/(.*)", "dest": "https://telegra.ph/file/$1"},
-        {"src": "/imgbb-upload", "dest": "https://api.imgbb.com/1/upload"},
-        {"src": "/custom-upload", "dest": "https://i.111666.best/image"}
+      {"src": "/","dest": "/index.html"},
+      {"src": "/upload","dest": "https://telegra.ph/upload"},
+      {"src": "/file/(.*)","dest": "https://telegra.ph/file/$1"},
+      {"src": "/imgbb-upload","dest": "https://zh-cn.imgbb.com/json"}
     ]
 }
