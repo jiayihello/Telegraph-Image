@@ -11,21 +11,21 @@
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
         body {
-            background: #f8f9fa; /* 更浅的背景颜色 */
+            background: #f8f9fa;
         }
 
         .neumorphism {
-            background: #ffffff; /* 纯白色背景 */
+            background: #ffffff;
             border-radius: 16px;
-            box-shadow: 6px 6px 12px #e0e0e0, /* 浅灰色阴影 */
-                        -6px -6px 12px #ffffff; /* 白色高光 */
+            box-shadow: 6px 6px 12px #e0e0e0,
+                        -6px -6px 12px #ffffff;
         }
 
         .neumorphism-inner {
-            background: #ffffff; /* 纯白色背景 */
+            background: #ffffff;
             border-radius: 16px;
-            box-shadow: inset 6px 6px 12px #e0e0e0, /* 内阴影 */
-                        inset -6px -6px 12px #ffffff; /* 内高光 */
+            box-shadow: inset 6px 6px 12px #e0e0e0,
+                        inset -6px -6px 12px #ffffff;
         }
 
         .neumorphism-hover:hover {
@@ -106,7 +106,6 @@
         </div>
 
         <div class="mt-6" x-show="uploadedUrls.length > 0">
-            <!-- 使用 flex 排列 "上传结果" 和 "复制全部链接" -->
             <div class="flex justify-between items-center mb-2">
                 <h3 class="text-lg font-semibold text-gray-700">上传结果</h3>
                 <button @click="copyAllUrls" class="text-sm text-blue-500 hover:text-blue-700">
@@ -137,7 +136,13 @@
                 images: [],
                 uploadedUrls: [],
                 dragover: false,
-                uploadService: 'telegraph', // 默认上传服务
+                uploadService: 'telegraph',
+
+                init() {
+                    this.$watch('uploadService', (newService) => {
+                        this.resetUploadState();
+                    });
+                },
 
                 handleDrop(e) {
                     console.log('Files dropped:', e.dataTransfer.files);
@@ -162,7 +167,6 @@
                     console.log('Adding files:', files);
                     for (let file of files) {
                         if (file.type.startsWith('image/')) {
-                           
                             const reader = new FileReader();
                             reader.onload = (e) => {
                                 this.images.push({
@@ -215,7 +219,6 @@
                                 this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
                                 image.status = '已完成';
                             } else if (this.uploadService === 'telegraph' && data[0] && data[0].src) {
-                                // 正确处理URL，避免重复的 '/file'
                                 const relativePath = data[0].src.startsWith('/file') ? data[0].src : `/file${data[0].src}`;
                                 const fullUrl = `${window.location.origin}${relativePath}`;
                                 this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
@@ -254,6 +257,12 @@
                     }).catch(err => {
                         console.error('复制失败:', err);
                     });
+                },
+                resetUploadState() {
+                    this.images.forEach(image => {
+                        image.status = '等待中';
+                    });
+                    this.uploadedUrls = [];
                 }
             }
         }
@@ -261,3 +270,4 @@
 </body>
 
 </html>
+
