@@ -4,16 +4,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telegraph图床</title>
+    <title>Telegraph图床 - Neumorphism 风格</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@2.3.0/dist/alpine.js"
         integrity="sha512-nIwdJlD5/vHj23CbO2iHCXtsqzdTTx3e3uAmpTm4x2Y8xCIFyWu4cSIV8GaGe2UNVq86/1h9EgUZy7tn243qdA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        body {
+            background: #e0e5ec;
+        }
+
+        .neumorphism {
+            background: #e0e5ec;
+            border-radius: 16px;
+            box-shadow: 8px 8px 16px #a3b1c6,
+                        -8px -8px 16px #ffffff;
+        }
+
+        .neumorphism-inner {
+            background: #e0e5ec;
+            border-radius: 16px;
+            box-shadow: inset 8px 8px 16px #a3b1c6,
+                        inset -8px -8px 16px #ffffff;
+        }
+
+        .neumorphism-hover:hover {
+            box-shadow: 8px 8px 16px #a3b1c6,
+                        -8px -8px 16px #ffffff,
+                        inset 4px 4px 8px #a3b1c6,
+                        inset -4px -4px 8px #ffffff;
+        }
+    </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-start p-4">
+<body class="min-h-screen flex flex-col items-center justify-start p-4">
     <!-- 顶部导航栏 -->
-    <header class="bg-white w-full py-4 shadow-md">
+    <header class="neumorphism w-full py-4 shadow-md">
         <div class="container mx-auto flex justify-between items-center px-4">
             <h1 class="text-2xl font-bold text-gray-800">Telegraph图床</h1>
             <!-- 可以在这里添加导航链接 -->
@@ -26,21 +52,21 @@
     </header>
 
     <!-- 主内容区 -->
-    <main class="bg-white p-8 rounded-lg shadow-md w-full max-w-4xl mt-6" x-data="imageUploader()">
+    <main class="neumorphism w-full max-w-4xl mt-6 p-8">
         <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">上传您的图片</h2>
 
         <div class="mt-4">
             <label for="upload-service" class="block text-sm font-medium text-gray-700">选择上传服务：</label>
             <select id="upload-service" x-model="uploadService"
-                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                class="neumorphism-inner mt-1 block w-full pl-3 pr-10 py-2 text-base border-none focus:outline-none focus:ring-blue-500 sm:text-sm rounded-md">
                 <option value="telegraph">Telegraph</option>
                 <option value="imgbb">ImgBB</option>
             </select>
         </div>
 
-        <div class="border-dashed border-4 border-gray-300 bg-gray-50 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 hover:bg-white transition duration-300 mt-6"
+        <div class="neumorphism-hover border-dashed border-4 border-gray-300 rounded-lg p-8 text-center cursor-pointer transition duration-300 mt-6"
             @click="$refs.fileInput.click()" @dragover.prevent="dragover = true" @dragleave.prevent="dragover = false"
-            @drop.prevent="handleDrop" @paste.prevent="handlePaste" :class="{'border-blue-500 bg-white': dragover}">
+            @drop.prevent="handleDrop" @paste.prevent="handlePaste" :class="{'neumorphism-inner': dragover}">
             <input type="file" class="hidden" x-ref="fileInput" @change="handleFileSelect" multiple accept="image/*">
             <p class="text-gray-600"><strong>点击</strong> 或 <strong>拖拽</strong>图片到此处上传</p>
             <p class="text-sm text-gray-500">支持多张图片同时上传</p>
@@ -50,7 +76,7 @@
             <h3 class="text-lg font-semibold mb-2 text-gray-700">上传列表</h3>
             <ul class="space-y-2">
                 <template x-for="(image, index) in images" :key="index">
-                    <li class="flex items-center justify-between bg-gray-50 p-2 rounded shadow-sm">
+                    <li class="neumorphism flex items-center justify-between p-2 rounded shadow-sm">
                         <div class="flex items-center">
                             <img :src="image.preview" alt="预览" class="w-10 h-10 object-cover mr-2 rounded">
                             <span x-text="image.name" class="text-sm text-gray-600 truncate"></span>
@@ -68,12 +94,12 @@
 
         <div class="mt-6 flex justify-between">
             <button @click="uploadImages"
-                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
+                class="neumorphism bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
                 :disabled="images.length === 0" :class="{'opacity-50 cursor-not-allowed': images.length === 0}">
                 上传图片
             </button>
             <button @click="clearImages"
-                class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+                class="neumorphism bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
                 :disabled="images.length === 0" :class="{'opacity-50 cursor-not-allowed': images.length === 0}">
                 清空列表
             </button>
@@ -88,7 +114,7 @@
             </div>
             <ul class="space-y-2">
                 <template x-for="(result, index) in uploadedUrls" :key="index">
-                    <li class="flex items-center justify-between bg-gray-50 p-2 rounded shadow-sm">
+                    <li class="neumorphism flex items-center justify-between p-2 rounded shadow-sm">
                         <div class="flex items-center flex-grow mr-2">
                             <img :src="result.preview" alt="预览" class="w-10 h-10 object-cover mr-2 rounded">
                             <a :href="result.url" target="_blank" class="text-sm text-blue-500 hover:underline truncate"
@@ -131,7 +157,8 @@
                     }
                 },
                 addFiles(files) {
-                    console.log('Adding files:', files);
+                    console.log
+                    ('Adding files:', files);
                     for (let file of files) {
                         if (file.type.startsWith('image/')) {
                             const reader = new FileReader();
