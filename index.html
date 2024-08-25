@@ -26,7 +26,7 @@
     </header>
 
     <!-- 主内容区 -->
-    <main class="bg-white p-8 rounded-lg shadow-md w-full max-w-4xl mt-6">
+    <main class="bg-white p-8 rounded-lg shadow-md w-full max-w-4xl mt-6" x-data="imageUploader()">
         <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">上传您的图片</h2>
 
         <div class="mt-4">
@@ -117,9 +117,11 @@
                     this.addFiles(e.dataTransfer.files);
                 },
                 handleFileSelect(e) {
+                    console.log('File selected:', e.target.files);
                     this.addFiles(e.target.files);
                 },
                 handlePaste(e) {
+                    console.log('Files pasted:', e.clipboardData.items);
                     const items = e.clipboardData.items;
                     for (let item of items) {
                         if (item.type.indexOf('image') !== -1) {
@@ -129,6 +131,7 @@
                     }
                 },
                 addFiles(files) {
+                    console.log('Adding files:', files);
                     for (let file of files) {
                         if (file.type.startsWith('image/')) {
                             const reader = new FileReader();
@@ -197,6 +200,7 @@
                     });
                 },
                 clearImages() {
+                    console.log('Clearing images');
                     this.images = [];
                     this.uploadedUrls = [];
                 },
@@ -226,5 +230,3 @@
 </body>
 
 </html>
-
-                           
