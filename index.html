@@ -57,7 +57,8 @@
         <div class="mt-4">
             <label for="upload-service" class="block text-sm font-medium text-gray-700">选择上传服务：</label>
             <select id="upload-service" x-model="uploadService"
-                class="neumorphism-inner mt-1 block w-full pl-3 pr-10 py-2 text-base border-none focus:outline-none focus:ring-blue-500 sm:text-sm rounded-md">
+                class="neumorphism-inner mt-1 block w-full pl-3 pr-10 py-2 text-base border-none focus:outline-none focus:ring-blue-500 sm:text-sm rounded-md"
+                @change="resetUploadState">
                 <option value="telegraph">Telegraph</option>
                 <option value="imgbb">ImgBB</option>
             </select>
@@ -253,13 +254,12 @@
                     });
                 },
                 resetUploadState() {
-                    // 遍历图片，将所有状态设置为“等待中”
+                    // 当切换上传服务时，将所有图片的状态重置为“等待中”
+                    console.log('Resetting upload state due to service change');
                     this.images.forEach(image => {
-                        if (image.status !== '已完成') { // 如果状态不是已完成，则重置为等待中
-                            image.status = '等待中';
-                        }
+                        image.status = '等待中';
                     });
-                    this.uploadedUrls = []; // 清除已上传URL列表以重新记录上传结果
+                    this.uploadedUrls = []; // 清空上传结果，以便可以重新上传
                 }
             }
         }
@@ -267,4 +267,3 @@
 </body>
 
 </html>
-
