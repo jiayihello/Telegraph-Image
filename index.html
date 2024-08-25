@@ -41,6 +41,14 @@
             flex: 1;
             margin-left: 10px;
         }
+
+        .preview-image {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            margin-right: 10px;
+            border-radius: 8px;
+        }
     </style>
 </head>
 
@@ -84,8 +92,10 @@
             <ul class="space-y-2">
                 <template x-for="(image, index) in images" :key="index">
                     <li class="neumorphism flex items-center p-2 rounded shadow-sm">
-                        <!-- 显示文件选择时的预览图 -->
-                        <img :src="image.preview" alt="预览" class="w-16 h-16 object-cover mr-4 rounded">
+                        <!-- 缩小后的文件选择时的预览图 -->
+                        <img :src="image.preview" alt="预览" class="preview-image">
+                        <!-- 图片名称 -->
+                        <span class="text-sm text-gray-700 flex-1 truncate" x-text="image.name"></span>
                         <!-- 状态信息 -->
                         <span x-text="image.status" class="text-sm" :class="{
                             'text-yellow-500': image.status === '等待中',
@@ -118,7 +128,7 @@
                 <template x-for="(result, index) in uploadedUrls" :key="index">
                     <li class="neumorphism flex items-center p-2 rounded shadow-sm">
                         <!-- 上传成功后的缩略图 -->
-                        <img :src="result.preview" alt="预览" class="w-16 h-16 object-cover mr-4 rounded">
+                        <img :src="result.preview" alt="预览" class="preview-image">
                         <!-- 代码选项 -->
                         <div class="flex-1 code-options">
                             <button @click="copyToClipboard(result.url, '图片链接', $event)"
@@ -162,7 +172,7 @@
                 handlePaste(e) {
                     const items = e.clipboardData.items;
                     for (let item of items) {
-                        if (item.type.indexOf('image') !== -1) {
+                        if (item.type.indexOf('image') !== --1) {
                             const blob = item.getAsFile();
                             this.addFiles([blob]);
                         }
