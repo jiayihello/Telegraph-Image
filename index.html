@@ -84,38 +84,6 @@
             <p class="text-sm text-gray-500">支持多张图片同时上传</p>
         </div>
 
-        <div class="mt-6" x-show="images.length > 0">
-            <h3 class="text-lg font-semibold mb-2 text-gray-700">上传列表</h3>
-            <ul class="space-y-2">
-                <template x-for="(image, index) in images" :key="index">
-                    <li class="neumorphism flex items-center p-2 rounded shadow-sm">
-                        <!-- 缩略图 -->
-                        <img :src="image.preview" alt="预览" class="w-16 h-16 object-cover mr-4 rounded">
-
-                        <!-- 代码选项 -->
-                        <div class="code-options">
-                            <button @click="copyToClipboard(image.url, 'link', $event)"
-                                class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
-                                图片链接
-                            </button>
-                            <button @click="copyToClipboard(generateCode(image.url, 'html'), 'html', $event)"
-                                class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
-                                HTML
-                            </button>
-                            <button @click="copyToClipboard(generateCode(image.url, 'bbcode'), 'bbcode', $event)"
-                                class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
-                                BBCode
-                            </button>
-                            <button @click="copyToClipboard(generateCode(image.url, 'markdown'), 'markdown', $event)"
-                                class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
-                                Markdown
-                            </button>
-                        </div>
-                    </li>
-                </template>
-            </ul>
-        </div>
-
         <!-- 上传按钮部分 -->
         <div class="mt-6 flex justify-between items-center">
             <button @click="uploadImages"
@@ -128,6 +96,38 @@
                 :disabled="images.length === 0" :class="{'opacity-50 cursor-not-allowed': images.length === 0}">
                 清空列表
             </button>
+        </div>
+
+        <div class="mt-6" x-show="uploadedUrls.length > 0">
+            <h3 class="text-lg font-semibold mb-2 text-gray-700">上传结果</h3>
+            <ul class="space-y-2">
+                <template x-for="(result, index) in uploadedUrls" :key="index">
+                    <li class="neumorphism flex items-center p-2 rounded shadow-sm">
+                        <!-- 上传成功后的缩略图 -->
+                        <img :src="result.preview" alt="预览" class="w-16 h-16 object-cover mr-4 rounded">
+
+                        <!-- 代码选项 -->
+                        <div class="flex-1 code-options">
+                            <button @click="copyToClipboard(result.url, '图片链接', $event)"
+                                class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
+                                图片链接
+                            </button>
+                            <button @click="copyToClipboard(generateCode(result.url, 'html'), 'HTML', $event)"
+                                class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
+                                HTML
+                            </button>
+                            <button @click="copyToClipboard(generateCode(result.url, 'bbcode'), 'BBCode', $event)"
+                                class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
+                                BBCode
+                            </button>
+                            <button @click="copyToClipboard(generateCode(result.url, 'markdown'), 'Markdown', $event)"
+                                class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
+                                Markdown
+                            </button>
+                        </div>
+                    </li>
+                </template>
+            </ul>
         </div>
     </main>
 
@@ -174,7 +174,7 @@
                             };
                             reader.readAsDataURL(file);
                         } else {
-                            console.log('Not an image file:', file);
+                            console.log('Not animage file:', file);
                         }
                     }
                 },
