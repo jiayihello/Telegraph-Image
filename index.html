@@ -34,6 +34,18 @@
                         inset 4px 4px 8px #e0e0e0,
                         inset -4px -4px 8px #ffffff;
         }
+
+        .code-options {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            width: 100%;
+        }
+
+        .code-input {
+            flex: 1;
+            margin-left: 10px;
+        }
     </style>
 </head>
 
@@ -76,17 +88,29 @@
             <h3 class="text-lg font-semibold mb-2 text-gray-700">上传列表</h3>
             <ul class="space-y-2">
                 <template x-for="(image, index) in images" :key="index">
-                    <li class="neumorphism flex items-center justify-between p-2 rounded shadow-sm">
-                        <div class="flex items-center">
-                            <img :src="image.preview" alt="预览" class="w-10 h-10 object-cover mr-2 rounded">
-                            <span x-text="image.name" class="text-sm text-gray-600 truncate"></span>
+                    <li class="neumorphism flex items-center p-2 rounded shadow-sm">
+                        <!-- 缩略图 -->
+                        <img :src="image.preview" alt="预览" class="w-16 h-16 object-cover mr-4 rounded">
+
+                        <!-- 代码选项 -->
+                        <div class="code-options">
+                            <button @click="copyToClipboard(image.url, 'link', $event)"
+                                class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
+                                图片链接
+                            </button>
+                            <button @click="copyToClipboard(generateCode(image.url, 'html'), 'html', $event)"
+                                class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
+                                HTML
+                            </button>
+                            <button @click="copyToClipboard(generateCode(image.url, 'bbcode'), 'bbcode', $event)"
+                                class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
+                                BBCode
+                            </button>
+                            <button @click="copyToClipboard(generateCode(image.url, 'markdown'), 'markdown', $event)"
+                                class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
+                                Markdown
+                            </button>
                         </div>
-                        <span x-text="image.status" class="text-sm" :class="{
-                            'text-yellow-500': image.status === '等待中',
-                            'text-blue-500': image.status === '上传中',
-                            'text-green-500': image.status === '已完成',
-                            'text-red-500': image.status === '失败'
-                        }"></span>
                     </li>
                 </template>
             </ul>
@@ -104,50 +128,6 @@
                 :disabled="images.length === 0" :class="{'opacity-50 cursor-not-allowed': images.length === 0}">
                 清空列表
             </button>
-        </div>
-
-        <div class="mt-6" x-show="uploadedUrls.length > 0">
-            <!-- 使用 flex 排列 "上传结果" 和 "复制全部链接" -->
-            <div class="flex justify-between items-center mb-2">
-                <h3 class="text-lg font-semibold text-gray-700">上传结果</h3>
-                <button @click="copyAllUrls" class="text-sm text-blue-500 hover:text-blue-700">
-                    复制全部链接
-                </button>
-            </div>
-            <ul class="space-y-2">
-                <template x-for="(result, index) in uploadedUrls" :key="index">
-                    <li class="neumorphism flex flex-col p-2 rounded shadow-sm">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center flex-grow mr-2">
-                                <img :src="result.preview" alt="预览" class="w-10 h-10 object-cover mr-2 rounded">
-                                <a :href="result.url" target="_blank" class="text-sm text-blue-500 hover:underline truncate"
-                                    x-text="result.url"></a>
-                            </div>
-                            <button @click="copyToClipboard(result.url, $event)"
-                                class="text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap">
-                                复制
-                            </button>
-                        </div>
-                        <!-- 选择代码格式 -->
-                        <div class="mt-2">
-                            <select x-model="result.codeType" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-none focus:outline-none focus:ring-blue-500 sm:text-sm rounded-md">
-                                <option value="link">图片链接</option>
-                                <option value="html">网页贴图代码 (HTML)</option>
-                                <option value="bbcode">论坛贴图代码 (BBCode)</option>
-                                <option value="markdown">Markdown代码</option>
-                            </select>
-                            <div class="mt-2 flex items-center">
-                                <input type="text" :value="generateCode(result.url, result.codeType)" readonly
-                                    class="neumorphism-inner w-full p-2 text-sm text-gray-600 rounded" />
-                                <button @click="copyToClipboard(generateCode(result.url, result.codeType), $event)"
-                                    class="neumorphism bg-gray-200 text-gray-600 px-4 py-1 ml-2 rounded hover:bg-gray-300 transition duration-300">
-                                    复制代码
-                                </button>
-                            </div>
-                        </div>
-                    </li>
-                </template>
-            </ul>
         </div>
     </main>
 
@@ -188,7 +168,8 @@
                                     file: file,
                                     name: file.name || 'pasted-image.png',
                                     status: '等待中',
-                                    preview: e.target.result
+                                    preview: e.target.result,
+                                    url: '', // 保存上传后的URL
                                 });
                             };
                             reader.readAsDataURL(file);
@@ -232,13 +213,15 @@
                             console.log('Response data:', data);
                             if (this.uploadService === 'imgbb' && data.status === 200) {
                                 const fullUrl = data.data.url;
-                                this.uploadedUrls.push({ url: fullUrl, preview: image.preview, codeType: 'link' });
+                                image.url = fullUrl; // 保存上传后的URL
+                                this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
                                 image.status = '已完成';
                             } else if (this.uploadService === 'telegraph' && data[0] && data[0].src) {
                                 // 正确处理URL，避免重复的 '/file'
                                 const relativePath = data[0].src.startsWith('/file') ? data[0].src : `/file${data[0].src}`;
                                 const fullUrl = `${window.location.origin}${relativePath}`;
-                                this.uploadedUrls.push({ url: fullUrl, preview: image.preview, codeType: 'link' });
+                                image.url = fullUrl; // 保存上传后的URL
+                                this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
                                 image.status = '已完成';
                             } else {
                                 throw new Error('Upload failed: ' + JSON.stringify(data));
@@ -255,11 +238,11 @@
                     this.images = [];
                     this.uploadedUrls = [];
                 },
-                copyToClipboard(text, event) {
+                copyToClipboard(text, type, event) {
                     navigator.clipboard.writeText(text).then(() => {
                         const button = event.target;
                         const originalText = button.textContent;
-                        button.textContent = '已复制';
+                        button.textContent = `${type} 已复制`;
                         setTimeout(() => {
                             button.textContent = originalText;
                         }, 2000);
@@ -280,6 +263,7 @@
                     console.log('Resetting upload state due to service change');
                     this.images.forEach(image => {
                         image.status = '等待中';
+                        image.url = ''; // 清空之前的URL
                     });
                     this.uploadedUrls = []; // 清空上传结果，以便可以重新上传
                 },
