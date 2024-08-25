@@ -8,27 +8,33 @@
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@2.3.0/dist/alpine.js"
         integrity="sha512-nIwdJlD5/vHj23CbO2iHCXtsqzdTTx3e3uAmpTm4x2Y8xCIFyWu4cSIV8GaGe2UNVq86/1h9EgUZy7tn243qdA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <style>
-        body {
-            background: #f8f9fa;
-        }
-        .neumorphism {
-            background: #ffffff;
-            border-radius: 16px;
-            box-shadow: 6px 6px 12px #e0e0e0, -6px -6px 12px #ffffff;
-        }
-        .neumorphism-inner {
-            background: #ffffff;
-            border-radius: 16px;
-            box-shadow: inset 6px 6px 12px #e0e0e0, inset -6px -6px 12px #ffffff;
-        }
-        .neumorphism-hover:hover {
-            box-shadow: 6px 6px 12px #e0e0e0, -6px -6px 12px #ffffff, inset 4px 4px 8px #e0e0e0, inset -4px -4px 8px #ffffff;
-        }
-        .button-copied {
-            transition: background-color 0.3s, color 0.3s;
-        }
-    </style>
+   <style>
+    .neumorphism {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 6px 6px 12px #e0e0e0, -6px -6px 12px #ffffff;
+    }
+    .neumorphism-inner {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: inset 6px 6px 12px #e0e0e0, inset -6px -6px 12px #ffffff;
+    }
+    .neumorphism-hover:hover {
+        box-shadow: 6px 6px 12px #e0e0e0, -6px -6px 12px #ffffff, inset 4px 4px 8px #e0e0e0, inset -4px -4px 8px #ffffff;
+    }
+    .button-copied {
+        transition: background-color 0.3s, color 0.3s;
+    }
+    /* 新增的样式 */
+    .highlight {
+        background-color: #f9fafb; /* 浅灰色背景 */
+        transition: background-color 0.3s ease;
+    }
+    .highlight:hover {
+        background-color: #e2e8f0; /* 鼠标悬浮时的背景色 */
+    }
+</style>
+
 </head>
 <body class="min-h-screen flex flex-col items-center justify-start p-4" x-data="imageUploader()">
     <header class="neumorphism w-full py-4 shadow-md">
