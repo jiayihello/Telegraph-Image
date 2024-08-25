@@ -84,39 +84,14 @@
             <ul class="space-y-2">
                 <template x-for="(image, index) in images" :key="index">
                     <li class="neumorphism flex items-center p-2 rounded shadow-sm">
-                        <!-- 文件选择时的预览图和上传成功后的图像 -->
+                        <!-- 显示文件选择时的预览图 -->
                         <img :src="image.preview" alt="预览" class="w-16 h-16 object-cover mr-4 rounded">
-
-                        <!-- 状态信息或代码选项 -->
-                        <div class="flex-1">
-                            <template x-if="image.status === '已完成'">
-                                <div class="code-options">
-                                    <button @click="copyToClipboard(image.url, '图片链接', $event)"
-                                        class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
-                                        图片链接
-                                    </button>
-                                    <button @click="copyToClipboard(generateCode(image.url, 'html'), 'HTML', $event)"
-                                        class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
-                                        HTML
-                                    </button>
-                                    <button @click="copyToClipboard(generateCode(image.url, 'bbcode'), 'BBCode', $event)"
-                                        class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
-                                        BBCode
-                                    </button>
-                                    <button @click="copyToClipboard(generateCode(image.url, 'markdown'), 'Markdown', $event)"
-                                        class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
-                                        Markdown
-                                    </button>
-                                </div>
-                            </template>
-                            <template x-if="image.status !== '已完成'">
-                                <span x-text="image.status" class="text-sm" :class="{
-                                    'text-yellow-500': image.status === '等待中',
-                                    'text-blue-500': image.status === '上传中',
-                                    'text-red-500': image.status === '失败'
-                                }"></span>
-                            </template>
-                        </div>
+                        <!-- 状态信息 -->
+                        <span x-text="image.status" class="text-sm" :class="{
+                            'text-yellow-500': image.status === '等待中',
+                            'text-blue-500': image.status === '上传中',
+                            'text-red-500': image.status === '失败'
+                        }"></span>
                     </li>
                 </template>
             </ul>
@@ -135,26 +110,56 @@
                 清空列表
             </button>
         </div>
+
+        <!-- 上传结果部分 -->
+        <div class="mt-6" x-show="uploadedUrls.length > 0">
+            <h3 class="text-lg font-semibold mb-2 text-gray-700">上传结果</h3>
+            <ul class="space-y-2">
+                <template x-for="(result, index) in uploadedUrls" :key="index">
+                    <li class="neumorphism flex items-center p-2 rounded shadow-sm">
+                        <!-- 上传成功后的缩略图 -->
+                        <img :src="result.preview" alt="预览" class="w-16 h-16 object-cover mr-4 rounded">
+                        <!-- 代码选项 -->
+                        <div class="flex-1 code-options">
+                            <button @click="copyToClipboard(result.url, '图片链接', $event)"
+                                class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
+                                图片链接
+                            </button>
+                            <button @click="copyToClipboard(generateCode(result.url, 'html'), 'HTML', $event)"
+                                class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
+                                HTML
+                            </button>
+                            <button @click="copyToClipboard(generateCode(result.url, 'bbcode'), 'BBCode', $event)"
+                                class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
+                                BBCode
+                            </button>
+                            <button @click="copyToClipboard(generateCode(result.url, 'markdown'), 'Markdown', $event)"
+                                class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
+                                Markdown
+                            </button>
+                        </div>
+                    </li>
+                </template>
+            </ul>
+        </div>
     </main>
 
     <script>
         function imageUploader() {
             return {
                 images: [],
+                uploadedUrls: [],
                 dragover: false,
-                uploadService: 'telegraph', // 默认上传服务
+                uploadService: 'telegraph',
 
                 handleDrop(e) {
-                    console.log('Files dropped:', e.dataTransfer.files);
                     this.dragover = false;
                     this.addFiles(e.dataTransfer.files);
                 },
                 handleFileSelect(e) {
-                    console.log('File selected:', e.target.files);
                     this.addFiles(e.target.files);
                 },
                 handlePaste(e) {
-                    console.log('Files pasted:', e.clipboardData.items);
                     const items = e.clipboardData.items;
                     for (let item of items) {
                         if (item.type.indexOf('image') !== -1) {
@@ -164,7 +169,6 @@
                     }
                 },
                 addFiles(files) {
-                    console.log('Adding files:', files);
                     for (let file of files) {
                         if (file.type.startsWith('image/')) {
                             const reader = new FileReader();
@@ -172,9 +176,9 @@
                                 this.images.push({
                                     file: file,
                                     name: file.name || 'pasted-image.png',
-                                    status: '等待中', // 初始化为等待上传状态
-                                    preview: e.target.result, // 显示文件选择时的预览图
-                                    url: '' // 用于保存上传后的URL
+                                    status: '等待中',
+                                    preview: e.target.result, // 文件选择时的预览图
+                                    url: '' // 保存上传后的URL
                                 });
                             };
                             reader.readAsDataURL(file);
@@ -186,8 +190,6 @@
                 uploadImages() {
                     const uploadUrl = this.uploadService === 'imgbb' ? 'https://api.imgbb.com/1/upload' : '/upload';
                     const apiKey = '670099fdeef8019b7624a39d6c4cc7d7'; // 只有 imgbb 使用
-
-                    console.log('Starting upload with service:', this.uploadService);
 
                     this.images.forEach(image => {
                         if (image.status !== '等待中') return;
@@ -207,22 +209,20 @@
                             body: formData
                         })
                         .then(response => {
-                            console.log('Response:', response);
                             if (!response.ok) {
                                 throw new Error(`HTTP error! status: ${response.status}`);
                             }
                             return response.json();
                         })
                         .then(data => {
-                            console.log('Response data:', data);
                             if (this.uploadService === 'imgbb' && data.status === 200) {
                                 const fullUrl = data.data.url;
-                                image.url = fullUrl; // 保存上传后的URL
+                                this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
                                 image.status = '已完成';
                             } else if (this.uploadService === 'telegraph' && Array.isArray(data) && data[0] && data[0].src) {
                                 const relativePath = data[0].src.startsWith('/file') ? data[0].src : `/file${data[0].src}`;
                                 const fullUrl = `${window.location.origin}${relativePath}`;
-                                image.url = fullUrl; // 保存上传后的URL
+                                this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
                                 image.status = '已完成';
                             } else {
                                 throw new Error('Upload failed: ' + JSON.stringify(data));
@@ -235,8 +235,8 @@
                     });
                 },
                 clearImages() {
-                    console.log('Clearing images');
                     this.images = [];
+                    this.uploadedUrls = [];
                 },
                 copyToClipboard(text, type, event) {
                     navigator.clipboard.writeText(text).then(() => {
@@ -251,11 +251,11 @@
                     });
                 },
                 resetUploadState() {
-                    console.log('Resetting upload state due to service change');
                     this.images.forEach(image => {
                         image.status = '等待中';
                         image.url = ''; // 清空之前的URL
                     });
+                    this.uploadedUrls = [];
                 },
                 generateCode(url, codeType) {
                     switch (codeType) {
@@ -275,3 +275,4 @@
 </body>
 
 </html>
+
