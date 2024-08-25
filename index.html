@@ -86,6 +86,7 @@
                         }"></span>
                     </li>
                 </template>
+            </ul
             </ul>
         </div>
 
@@ -117,128 +118,126 @@
                             <button @click="copyToClipboard(generateHtmlCode(result.url), $event)" class="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded">复制HTML</button>
                             <button @click="copyToClipboard(generateBBCode(result.url), $event)" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded">复制BBCode</button>
                             <button @click="copyToClipboard(generateMarkdownCode(result.url), $event)" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-3 rounded">复制Markdown</button>
-                        </div>
-                    </li
-                </template>
-            </ul>
-        </div>
-    </main>
-
+</div>
+</li>
+</template>
+</ul>
+</div>
+</main>
     <script>
-        function imageUploader() {
-            return {
-                images: [],
-                uploadedUrls: [],
-                dragover: false,
-                uploadService: 'telegraph',
+    function imageUploader() {
+        return {
+            images: [],
+            uploadedUrls: [],
+            dragover: false,
+            uploadService: 'telegraph',
 
-                handleDrop(e) {
-                    console.log('Files dropped:', e.dataTransfer.files);
-                    this.dragover = false;
-                    this.addFiles(e.dataTransfer.files);
-                },
-                handleFileSelect(e) {
-                    console.log('File selected:', e.target.files);
-                    this.addFiles(e.target.files);
-                },
-                handlePaste(e) {
-                    console.log('Files pasted:', e.clipboardData.items);
-                    const items = e.clipboardData.items;
-                    for (let item of items) {
-                        if (item.type.indexOf('image') !== -1) {
-                            const blob = item.getAsFile();
-                            this.addFiles([blob]);
-                        }
+            handleDrop(e) {
+                console.log('Files dropped:', e.dataTransfer.files);
+                this.dragover = false;
+                this.addFiles(e.dataTransfer.files);
+            },
+            handleFileSelect(e) {
+                console.log('File selected:', e.target.files);
+                this.addFiles(e.target.files);
+            },
+            handlePaste(e) {
+                console.log('Files pasted:', e.clipboardData.items);
+                const items = e.clipboardData.items;
+                for (let item of items) {
+                    if (item.type.indexOf('image') !== -1) {
+                        const blob = item.getAsFile();
+                        this.addFiles([blob]);
                     }
-                },
-                addFiles(files) {
-                    for (let file of files) {
-                        if (file.type.startsWith('image/')) {
-                            const reader = new FileReader();
-                            reader.onload = (e) => {
-                                this.images.push({
-                                    file: file,
-                                    name: file.name || 'pasted-image.png',
-                                    status: '等待中',
-                                    preview: e.target.result
-                                });
-                                // Immediately start uploading files as they are added
-                                this.uploadImages();
-                            };
-                            reader.readAsDataURL(file);
-                        }
-                    }
-                },
-                uploadImages() {
-                    this.images.forEach((image, index) => {
-                        if (image.status !== '等待中') return;
-                        image.status = '上传中';
-                        const formData = new FormData();
-                        formData.append('image', image.file);
-
-                        const uploadUrl = this.uploadService === 'imgbb' ? 'https://api.imgbb.com/1/upload' : '/upload';
-                        if (this.uploadService === 'imgbb') {
-                            formData.append('key', 'YOUR_API_KEY'); // Ensure you replace 'YOUR_API_KEY' with your actual API key
-                        }
-
-                        fetch(uploadUrl, {
-                            method: 'POST',
-                            body: formData
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.error) {
-                                console.error('Upload error:', data.error.message);
-                                image.status = '失败';
-                            } else {
-                                image.status = '已完成';
-                                const uploadedUrl = this.uploadService === 'imgbb' ? data.data.url : data.url;
-                                this.uploadedUrls.push({
-                                    url: uploadedUrl,
-                                    preview: image.preview
-                                });
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Upload failed:', error);
-                            image.status = '失败';
-                        });
-                    });
-                },
-                clearImages() {
-                    this.images = [];
-                    this.uploadedUrls = [];
-                },
-                resetUploadState() {
-                    console.log('Resetting upload state');
-                    this.images.forEach(image => {
-                        image.status = '等待中';
-                    });
-                    this.uploadedUrls = [];
-                },
-                copyToClipboard(text, event) {
-                    navigator.clipboard.writeText(text).then(() => {
-                        const originalText = event.target.innerText;
-                        event.target.innerText = '已复制';
-                        setTimeout(() => {
-                            event.target.innerText = originalText;
-                        }, 2000);
-                    }).catch(err => {
-                        console.error('Failed to copy:', err);
-                    });
-                },
-                generateHtmlCode(url) {
-                    return `<img src="${url}" alt="Image">`;
-                },
-                generateBBCode(url) {
-                    return `[img]${url}[/img]`;
-                },
-                generateMarkdownCode(url) {
-                    return `![Image](${url})`;
                 }
+            },
+            addFiles(files) {
+                for (let file of files) {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            this.images.push({
+                                file: file,
+                                name: file.name || 'pasted-image.png',
+                                status: '等待中',
+                                preview: e.target.result
+                            });
+                            // Immediately start uploading files as they are added
+                            this.uploadImages();
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                }
+            },
+            uploadImages() {
+                this.images.forEach((image, index) => {
+                    if (image.status !== '等待中') return;
+                    image.status = '上传中';
+                    const formData = new FormData();
+                    formData.append('image', image.file);
+
+                    const uploadUrl = this.uploadService === 'imgbb' ? 'https://api.imgbb.com/1/upload' : '/upload';
+                    if (this.uploadService === 'imgbb') {
+                        formData.append('key', 'YOUR_API_KEY'); // Ensure you replace 'YOUR_API_KEY' with your actual API key
+                    }
+
+                    fetch(uploadUrl, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            console.error('Upload error:', data.error.message);
+                            image.status = '失败';
+                        } else {
+                            image.status = '已完成';
+                            const uploadedUrl = this.uploadService === 'imgbb' ? data.data.url : data.url;
+                            this.uploadedUrls.push({
+                                url: uploadedUrl,
+                                preview: image.preview
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Upload failed:', error);
+                        image.status = '失败';
+                    });
+                });
+            },
+            clearImages() {
+                this.images = [];
+                this.uploadedUrls = [];
+            },
+            resetUploadState() {
+                console.log('Resetting upload state');
+                this.images.forEach(image => {
+                    image.status = '等待中';
+                });
+                this.uploadedUrls = [];
+            },
+            copyToClipboard(text, event) {
+                navigator.clipboard.writeText(text).then(() => {
+                    const originalText = event.target.innerText;
+                    event.target.innerText = '已复制';
+                    setTimeout(() => {
+                        event.target.innerText = originalText;
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Failed to copy:', err);
+                });
+            },
+            generateHtmlCode(url) {
+                return `<img src="${url}" alt="Image">`;
+            },
+            generateBBCode(url) {
+                return `[img]${url}[/img]`;
+            },
+            generateMarkdownCode(url) {
+                return `![Image](${url})`;
             }
         }
-    </script>
+    }
+</script>
 </body>
 </html>
-
