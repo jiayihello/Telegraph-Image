@@ -138,12 +138,6 @@
                 dragover: false,
                 uploadService: 'telegraph',
 
-                init() {
-                    this.$watch('uploadService', (newService) => {
-                        this.resetUploadState();
-                    });
-                },
-
                 handleDrop(e) {
                     console.log('Files dropped:', e.dataTransfer.files);
                     this.dragover = false;
@@ -259,10 +253,13 @@
                     });
                 },
                 resetUploadState() {
+                    // 遍历图片，将所有状态设置为“等待中”
                     this.images.forEach(image => {
-                        image.status = '等待中';
+                        if (image.status !== '已完成') { // 如果状态不是已完成，则重置为等待中
+                            image.status = '等待中';
+                        }
                     });
-                    this.uploadedUrls = [];
+                    this.uploadedUrls = []; // 清除已上传URL列表以重新记录上传结果
                 }
             }
         }
