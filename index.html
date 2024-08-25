@@ -89,37 +89,39 @@
             <ul class="space-y-2">
                 <template x-for="(image, index) in images" :key="index">
                     <li class="neumorphism flex items-center p-2 rounded shadow-sm">
-                        <!-- 显示选择的文件的预览图 -->
+                        <!-- 文件选择时的预览图和上传成功后的图像 -->
                         <img :src="image.preview" alt="预览" class="w-16 h-16 object-cover mr-4 rounded">
 
                         <!-- 状态信息或代码选项 -->
-                        <template x-if="image.status === '已完成'">
-                            <div class="flex-1 code-options">
-                                <button @click="copyToClipboard(image.url, '图片链接', $event)"
-                                    class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
-                                    图片链接
-                                </button>
-                                <button @click="copyToClipboard(generateCode(image.url, 'html'), 'HTML', $event)"
-                                    class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
-                                    HTML
-                                </button>
-                                <button @click="copyToClipboard(generateCode(image.url, 'bbcode'), 'BBCode', $event)"
-                                    class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
-                                    BBCode
-                                </button>
-                                <button @click="copyToClipboard(generateCode(image.url, 'markdown'), 'Markdown', $event)"
-                                    class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
-                                    Markdown
-                                </button>
-                            </div>
-                        </template>
-                        <template x-if="image.status !== '已完成'">
-                            <span x-text="image.status" class="text-sm" :class="{
-                                'text-yellow-500': image.status === '等待中',
-                                'text-blue-500': image.status === '上传中',
-                                'text-red-500': image.status === '失败'
-                            }"></span>
-                        </template>
+                        <div class="flex-1">
+                            <template x-if="image.status === '已完成'">
+                                <div class="code-options">
+                                    <button @click="copyToClipboard(image.url, '图片链接', $event)"
+                                        class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
+                                        图片链接
+                                    </button>
+                                    <button @click="copyToClipboard(generateCode(image.url, 'html'), 'HTML', $event)"
+                                        class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
+                                        HTML
+                                    </button>
+                                    <button @click="copyToClipboard(generateCode(image.url, 'bbcode'), 'BBCode', $event)"
+                                        class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
+                                        BBCode
+                                    </button>
+                                    <button @click="copyToClipboard(generateCode(image.url, 'markdown'), 'Markdown', $event)"
+                                        class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
+                                        Markdown
+                                    </button>
+                                </div>
+                            </template>
+                            <template x-if="image.status !== '已完成'">
+                                <span x-text="image.status" class="text-sm" :class="{
+                                    'text-yellow-500': image.status === '等待中',
+                                    'text-blue-500': image.status === '上传中',
+                                    'text-red-500': image.status === '失败'
+                                }"></span>
+                            </template>
+                        </div>
                     </li>
                 </template>
             </ul>
@@ -144,7 +146,6 @@
         function imageUploader() {
             return {
                 images: [],
-                uploadedUrls: [],
                 dragover: false,
                 uploadService: 'telegraph', // 默认上传服务
 
@@ -162,7 +163,7 @@
                     const items = e.clipboardData.items;
                     for (let item of items) {
                         if (item.type.indexOf('image') !== -1) {
-                            const blob = item.getAsFile();
+                            const blob                             = item.getAsFile();
                             this.addFiles([blob]);
                         }
                     }
@@ -177,7 +178,7 @@
                                     file: file,
                                     name: file.name || 'pasted-image.png',
                                     status: '等待中',
-                                    preview: e.target.result, // 预览图用于文件选择时
+                                    preview: e.target.result, // 显示文件选择时的预览图
                                     url: '' // 用于保存上传后的URL
                                 });
                             };
