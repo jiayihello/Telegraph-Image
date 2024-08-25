@@ -110,6 +110,11 @@
                             'text-blue-500': image.status === '上传中',
                             'text-red-500': image.status === '失败'
                         }"></span>
+                        <!-- 重试按钮 -->
+                        <button x-show="image.status === '失败'" @click="retryUpload(image.id)"
+                            class="neumorphism bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition duration-300">
+                            重试
+                        </button>
                     </li>
                 </template>
             </ul>
@@ -148,21 +153,22 @@
                                 HTML
                             </button>
                             <button @click="copyToClipboard(generateCode(result.url, 'bbcode'), 'BBCode', $event)"
-                                class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
-                                BBCode
-                            </button>
-                            <button @click="copyToClipboard(generateCode(result.url, 'markdown'), 'Markdown', $event)"
-                                class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 transition duration-300">
-                                                               Markdown
-                            </button>
-                        </div>
-                    </li>
-                </template>
-            </ul>
-        </div>
-    </main>
-
- <script>
+                                class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover
+transition duration-300">
+BBCode
+</button>
+<button @click="copyToClipboard(generateCode(result.url, 'markdown'), 'Markdown', $event)"
+class="neumorphism bg-gray-200 text-gray-600 px-2 py-1 rounded hover
+transition duration-300">
+Markdown
+</button>
+</div>
+</li>
+</template>
+</ul>
+</div>
+</main>
+    <script>
     function imageUploader() {
         return {
             images: [],
@@ -208,15 +214,10 @@
                 }
             },
             uploadImages() {
-                // Reset and calculate the number of images being uploaded
-                this.currentUploadingCount = this.images.filter(image => image.status === '等待中').length;
-
-                if (this.currentUploadingCount === 0) return;
-
                 const uploadUrl = this.uploadService === 'imgbb' ? 'https://api.imgbb.com/1/upload' : '/upload';
                 const apiKey = '670099fdeef8019b7624a39d6c4cc7d7'; // 只有 imgbb 使用
 
-                this.images.forEach(image => {
+                this.images.forEach((image, index) => {
                     if (image.status !== '等待中') return;
 
                     image.status = '上传中';
@@ -240,20 +241,15 @@
                         return response.json();
                     })
                     .then(data => {
-                        image.status = '已完成';
                         if (this.uploadService === 'imgbb' && data.status === 200) {
                             const fullUrl = data.data.url;
                             this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
-                            if (this.currentUploadingCount === 1) { // 当前只上传一张图片
-                                this.copyToClipboard(fullUrl, '图片链接已复制到剪贴板');
-                            }
+                            image.status = '已完成';
                         } else if (this.uploadService === 'telegraph' && Array.isArray(data) && data[0] && data[0].src) {
                             const relativePath = data[0].src.startsWith('/file') ? data[0].src : `/file${data[0].src}`;
                             const fullUrl = `${window.location.origin}${relativePath}`;
                             this.uploadedUrls.push({ url: fullUrl, preview: image.preview });
-                            if (this.currentUploadingCount === 1) { // 当前只上传一张图片
-                                this.copyToClipboard(fullUrl, '图片链接已复制到剪贴板');
-                            }
+                            image.status = '已完成';
                         } else {
                             throw new Error('Upload failed: ' + JSON.stringify(data));
                         }
@@ -261,16 +257,19 @@
                     .catch(error => {
                         console.error('Upload failed:', error);
                         image.status = '失败';
-                    })
-                    .finally(() => {
-                        // Update the count of images currently being uploaded
-                        this.currentUploadingCount = this.images.filter(image => image.status === '上传中').length;
                     });
                 });
             },
             clearImages() {
                 this.images = [];
                 this.uploadedUrls = [];
+            },
+            retryUpload(id) {
+                const image = this.images.find(img => img.id === id);
+                if (image) {
+                    image.status = '等待中';
+                    this.uploadImages(); // Attempt to re-upload
+                }
             },
             copyToClipboard(text, message) {
                 navigator.clipboard.writeText(text).then(() => {
@@ -298,7 +297,5 @@
         }
     }
 </script>
-
 </body>
-
 </html>
