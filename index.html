@@ -162,7 +162,7 @@
         </div>
     </main>
 
-   <script>
+  <script>
     function imageUploader() {
         return {
             images: [],
@@ -273,11 +273,17 @@
             showNotification(message) {
                 const notification = document.createElement('div');
                 notification.textContent = message;
-                notification.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #28a745; color: white; padding: 15px 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000;';
+                notification.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #28a745; color: white; padding: 10px 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000;';
                 document.body.appendChild(notification);
                 setTimeout(() => {
                     document.body.removeChild(notification);
                 }, 1000); // 1秒后自动消失
+            },
+            resetUploadState() {
+                this.images.forEach(image => {
+                    image.status = '等待中'; // Reset image status when switching upload services
+                });
+                this.uploadedUrls = [];
             }
         }
     }
