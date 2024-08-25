@@ -25,10 +25,12 @@
         .neumorphism-hover:hover {
             box-shadow: 6px 6px 12px #e0e0e0, -6px -6px 12px #ffffff, inset 4px 4px 8px #e0e0e0, inset -4px -4px 8px #ffffff;
         }
+        .button-copied {
+            transition: background-color 0.3s, color 0.3s;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-start p-4" x-data="imageUploader()">
-    <!-- 顶部导航栏 -->
     <header class="neumorphism w-full py-4 shadow-md">
         <div class="container mx-auto flex justify-between items-center px-4">
             <h1 class="text-2xl font-bold text-gray-800">Telegraph图床</h1>
@@ -40,7 +42,6 @@
         </div>
     </header>
 
-    <!-- 主内容区 -->
     <main class="neumorphism w-full max-w-4xl mt-6 p-8">
         <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">上传您的图片</h2>
         <div class="mt-4">
@@ -78,7 +79,7 @@
                         }"></span>
                     </li>
                 </template>
-                            </ul>
+            </ul>
         </div>
 
         <!-- 上传按钮部分 -->
@@ -102,15 +103,15 @@
             </div>
             <ul class="space-y-2">
                 <template x-for="(result, index) in uploadedUrls" :key="index">
-                    <li class="neumorphism flex flex-col items-start justify-between p-2 rounded shadow-sm">
-                        <div class="flex items-center w-full">
-                            <img :src="result.preview" alt="预览" class="w-10 h-10 object-cover mr-2 rounded">
-                        </div>
-                        <div class="text-xs w-full mt-2 space-x-2">
-                            <button @click="copyToClipboard(result.url)" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">复制链接</button>
-                            <button @click="copyToClipboard(generateHtmlCode(result.url))" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">复制HTML</button>
-                            <button @click="copyToClipboard(generateBBCode(result.url))" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">复制BBCode</button>
-                            <button @click="copyToClipboard(generateMarkdownCode(result.url))" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">复制Markdown</button>
+                    <li class="neumorphism flex items-center justify-between p-2 rounded shadow-sm">
+                        <div class="flex items-center">
+                            <img :src="result.preview" alt="预览" class="w-10 h-10 object-cover rounded">
+                            <div class="flex items-center space-x-2 ml-4">
+                                <button @click="copyToClipboard(result.url, $event)" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded button-copied">复制链接</button>
+                                <button @click="copyToClipboard(generateHtmlCode(result.url), $event)" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded button-copied">复制HTML</button>
+                                <button @click="copyToClipboard(generateBBCode(result.url), $event)" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded button-copied">复制BBCode</button>
+                                <button @click="copyToClipboard(generateMarkdownCode(result.url), $event)" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded button-copied">复制Markdown</button>
+                            </div>
                         </div>
                     </li>
                 </template>
@@ -118,112 +119,108 @@
         </div>
     </main>
 
-   <script>
-    function imageUploader() {
-        return {
-            images: [],
-            uploadedUrls: [],
-            dragover: false,
-            uploadService: 'telegraph',
+    <script>
+        function imageUploader() {
+            return {
+                images: [],
+                uploadedUrls: [],
+                dragover: false,
+                uploadService: 'telegraph',
 
-            handleDrop(e) {
-                this.dragover = false;
-                this.addFiles(e.dataTransfer.files);
-            },
-            handleFileSelect(e) {
-                this.addFiles(e.target.files);
-            },
-            handlePaste(e) {
-                const items = e.clipboardData.items;
-                for (let item of items) {
-                    if (item.type.indexOf('image') !== -1) {
-                        const blob = item.getAsFile();
-                        this.addFiles([blob]);
-                    }
-                }
-            },
-            addFiles(files) {
-                for (let file of files) {
-                    if (file.type.startsWith('image/')) {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            this.images.push({
-                                file: file,
-                                name: file.name,
-                                status: '等待中',
-                                preview: e.target.result
-                            });
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                }
-            },
-            uploadImages() {
-                const uploadUrl = this.uploadService === 'imgbb' ? 'https://api.imgbb.com/1/upload' : '/upload';
-                this.images.forEach(image => {
-                    if (image.status !== '等待中') return;
-                    image.status = '上传中';
-                    const formData = new FormData();
-                    formData.append('image', image.file);
-
-                    if (this.uploadService === 'imgbb') {
-                        formData.append('key', '670099fdeef8019b7624a39d6c4cc7d7'); // Replace 'YOUR_API_KEY' with your actual imgbb API key
-                    }
-
-                    fetch(uploadUrl, {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.error) {
-                            image.status = '失败';
-                            console.error('Upload error:', data.error.message);
-                        } else {
-                            image.status = '已完成';
-                            const uploadedUrl = this.uploadService === 'imgbb' ? data.data.url : data.url;
-                            this.uploadedUrls.push({
-                                url: uploadedUrl,
-                                preview: image.preview
-                            });
+                handleDrop(e) {
+                    this.dragover = false;
+                    this.addFiles(e.dataTransfer.files);
+                },
+                handleFileSelect(e) {
+                    this.addFiles(e.target.files);
+                },
+                handlePaste(e) {
+                    const items = e.clipboardData.items;
+                    for (let item of items) {
+                        if (item.type.indexOf('image') !== -1) {
+                            const blob = item.getAsFile();
+                            this.addFiles([blob]);
                         }
-                    })
-                    .catch(error => {
-                        console.error('Upload failed:', error);
-                        image.status = '失败';
+                    }
+                },
+                addFiles(files) {
+                    for (let file of files) {
+                        if (file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                this.images.push({
+                                    file: file,
+                                    name: file.name,
+                                    status: '等待中',
+                                    preview: e.target.result
+                                });
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    }
+                },
+                uploadImages() {
+                    const uploadUrl = this.uploadService === 'imgbb' ? 'https://api.imgbb.com/1/upload' : '/upload';
+                    this.images.forEach(image => {
+                        if (image.status !== '等待中') return;
+                        image.status = '上传中';
+                        const formData = new FormData();
+                        formData.append('image', image.file);
+
+                        if (this.uploadService === 'imgbb') {
+                            formData.append('key', 'YOUR_API_KEY'); // Replace 'YOUR_API_KEY' with your actual imgbb API key
+                        }
+
+                        fetch(uploadUrl, {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.error) {
+                                image.status = '失败';
+                                console.error('Upload error:', data.error.message);
+                            } else {
+                                image.status = '已完成';
+                                const uploadedUrl = this.uploadService === 'imgbb' ? data.data.url : data.url; // Adjust according to the response structure
+                                this.uploadedUrls.push({
+                                    url: uploadedUrl,
+                                    preview: image.preview
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Upload failed:', error);
+                            image.status = '失败';
+                        });
                     });
-                });
-            },
-            clearImages() {
-                this.images = [];
-                this.uploadedUrls = [];
-            },
-            resetUploadState() {
-                this.images.forEach(image => {
-                    image.status = '等待中';
-                });
-                this.uploadedUrls = [];
-            },
-            copyToClipboard(text) {
-                navigator.clipboard.writeText(text).then(() => {
-                    alert('内容已复制到剪贴板');
-                }).catch(err => {
-                    alert('复制失败: ' + err);
-                });
-            },
-            generateHtmlCode(url) {
-                return `<img src="${url}" alt="Image">`;
-            },
-            generateBBCode(url) {
-                return `[img]${url}[/img]`;
-            },
-            generateMarkdownCode(url) {
-                return `![Image](${url})`;
+                },
+                clearImages() {
+                    this.images = [];
+                    this.uploadedUrls = [];
+                },
+                copyToClipboard(text, event) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        const originalText = event.target.innerText;
+                        event.target.innerText = '已复制';
+                        setTimeout(() => {
+                            event.target.innerText = originalText;
+                        }, 2000); // Display "已复制" for 2 seconds before reverting
+                    }).catch(err => {
+                        console.error('复制失败:', err);
+                    });
+                },
+                generateHtmlCode(url) {
+                    return `<img src="${url}" alt="Image">`;
+                },
+                generateBBCode(url) {
+                    return `[img]${url}[/img]`;
+                },
+                generateMarkdownCode(url) {
+                    return `![Image](${url})`;
+                }
             }
         }
-    }
-</script>
-
+    </script>
 </body>
 </html>
-
