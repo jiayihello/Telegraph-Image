@@ -106,12 +106,13 @@
                     <li class="neumorphism flex items-center justify-between p-2 rounded shadow-sm">
                         <div class="flex items-center">
                             <img :src="result.preview" alt="预览" class="w-10 h-10 object-cover rounded">
-                            <div class="flex items-center space-x-2 ml-4">
-                                <button @click="copyToClipboard(result.url, $event)" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded button-copied">复制链接</button>
-                                <button @click="copyToClipboard(generateHtmlCode(result.url), $event)" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded button-copied">复制HTML</button>
-                                <button @click="copyToClipboard(generateBBCode(result.url), $event)" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded button-copied">复制BBCode</button>
-                                <button @click="copyToClipboard(generateMarkdownCode(result.url), $event)" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded button-copied">复制Markdown</button>
-                            </div>
+<div class="flex items-center space-x-2 ml-4">
+    <button @click="copyToClipboard(result.url, $event)" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded mx-1 my-1 button-copied">复制链接</button>
+    <button @click="copyToClipboard(generateHtmlCode(result.url), $event)" class="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded mx-1 my-1 button-copied">复制HTML</button>
+    <button @click="copyToClipboard(generateBBCode(result.url), $event)" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded mx-1 my-1 button-copied">复制BBCode</button>
+    <button @click="copyToClipboard(generateMarkdownCode(result.url), $event)" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-3 rounded mx-1 my-1 button-copied">复制Markdown</button>
+</div>
+
                         </div>
                     </li>
                 </template>
